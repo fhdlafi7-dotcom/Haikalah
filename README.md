@@ -12,19 +12,22 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* تعديل التصميم ليكون جنباً إلى جنب بشكل دائم وثابت */
+        /* تثبيت الصفحة بالكامل لمنع الالتفاف أو النزول للأسفل */
         body {
-            display: flex;
-            flex-direction: row-reverse; /* لوحة التحكم يميناً ومساحة العمل يساراً */
+            width: 100vw;
             height: 100vh;
             background-color: #f0f2f5;
+            position: relative;
             overflow: hidden;
         }
 
-        /* لوحة التحكم على اليمين */
+        /* لوحة التحكم ثابتة تماماً على اليمين */
         aside {
+            position: absolute;
+            top: 0;
+            right: 0;
             width: 360px;
-            min-width: 360px;
+            height: 100vh;
             background-color: #ffffff;
             border-left: 1px solid #ddd;
             padding: 15px;
@@ -34,7 +37,6 @@
             box-shadow: -2px 0 5px rgba(0,0,0,0.05);
             overflow-y: auto;
             z-index: 1000;
-            height: 100vh;
         }
 
         aside h2 {
@@ -142,16 +144,18 @@
             background-color: #c82333;
         }
 
-        /* مساحة العمل على اليسار */
+        /* مساحة العمل تأخذ المساحة المتبقية على اليسار تماماً */
         main {
-            flex: 1;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 360px; /* ترك مساحة لوحة التحكم يميناً */
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
             overflow: auto;
             background-color: #e4e6eb;
-            height: 100vh;
             padding: 40px 20px;
         }
 
@@ -199,7 +203,7 @@
             height: 210mm;
         }
 
-        /* تذييل الصفحة المخصص (التاريخ في الأسفل) */
+        /* تذييل الصفحة المخصص (التاريخ في الأسفل عند الطباعة) */
         .page-footer-date {
             position: absolute;
             bottom: 10mm;
@@ -279,11 +283,15 @@
                 display: block;
                 height: auto;
                 overflow: visible;
+                width: auto;
             }
             aside, .zoom-controls {
                 display: none !important;
             }
             main {
+                position: static !important;
+                left: auto !important;
+                right: auto !important;
                 padding: 0 !important;
                 background: none !important;
                 display: block;
@@ -950,7 +958,6 @@
         function clearPage() {
             if (confirm('هل أنت متأكد من مسح كافة العناصر في الصفحة؟')) {
                 a4Page.innerHTML = '<div class="page-footer-date" id="print-date"></div>';
-                selectedElement.value = null;
                 selectedElement = null;
             }
         }
