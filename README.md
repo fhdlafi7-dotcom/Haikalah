@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق هيكلة A4 التفاعلي</title>
+    <title>مخطط - تطبيق تصميم الهياكل A4</title>
     <style>
         * {
             box-sizing: border-box;
@@ -21,67 +21,85 @@
 
         /* لوحة التحكم على اليمين */
         aside {
-            width: 340px;
+            width: 360px;
+            min-width: 360px;
             background-color: #ffffff;
             border-left: 1px solid #ddd;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             box-shadow: -2px 0 5px rgba(0,0,0,0.05);
             overflow-y: auto;
-            z-index: 100;
+            z-index: 1000;
+            height: 100vh;
         }
 
         aside h2 {
-            font-size: 1.2rem;
-            color: #333;
+            font-size: 1.1rem;
+            color: #2c3e50;
             border-bottom: 2px solid #007bff;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
+        }
+
+        .section-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .section-box label {
+            font-size: 0.8rem;
+            color: #495057;
+            font-weight: bold;
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-        }
-
-        .control-group label {
-            font-size: 0.85rem;
-            color: #555;
-            font-weight: bold;
+            gap: 4px;
         }
 
         .control-group input, 
         .control-group select {
-            padding: 8px 12px;
+            padding: 6px 10px;
             border: 1px solid #ccc;
             border-radius: 6px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             outline: none;
+            background: #fff;
         }
 
-        .control-group input:focus, 
-        .control-group select:focus {
-            border-color: #007bff;
+        .row-inputs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .row-inputs > div {
+            flex: 1;
         }
 
         .btn-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
 
         .tool-btn {
-            padding: 10px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
+            padding: 7px;
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
             border-radius: 6px;
             cursor: pointer;
             transition: 0.2s;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: bold;
-            color: #333;
+            color: #334155;
+            text-align: center;
         }
 
         .tool-btn:hover {
@@ -91,17 +109,34 @@
         }
 
         .action-btn {
-            padding: 10px;
-            background-color: #dc3545;
+            padding: 8px;
+            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 0.85rem;
             transition: 0.2s;
         }
 
         .action-btn:hover {
+            background-color: #218838;
+        }
+
+        .pdf-btn {
+            background-color: #17a2b8;
+        }
+        .pdf-btn:hover {
+            background-color: #138496;
+        }
+
+        .danger-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+        .danger-btn:hover {
             background-color: #c82333;
         }
 
@@ -111,17 +146,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             position: relative;
             overflow: auto;
             background-color: #e4e6eb;
+            height: 100vh;
+            padding: 40px 20px;
         }
 
-        /* شريط التحكم بالزووم */
         .zoom-controls {
-            position: absolute;
+            position: fixed;
             top: 20px;
-            left: 20px;
+            left: 30px;
             background: white;
             padding: 8px 15px;
             border-radius: 8px;
@@ -129,7 +164,7 @@
             display: flex;
             gap: 10px;
             align-items: center;
-            z-index: 10;
+            z-index: 100;
         }
 
         .zoom-controls button {
@@ -140,15 +175,11 @@
             border-radius: 4px;
         }
 
-        .zoom-controls button:hover {
-            background: #e2e2e2;
-        }
-
-        /* صفحة A4 */
         .workspace-container {
-            transform-origin: center center;
+            transform-origin: top center;
             transition: transform 0.05s ease;
-            margin: 50px;
+            margin-top: 20px;
+            margin-bottom: 50px;
         }
 
         .a4-page {
@@ -158,10 +189,27 @@
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
             position: relative;
             overflow: hidden;
-            cursor: default;
+            transition: width 0.3s, height 0.3s;
         }
 
-        /* عناصر التصميم داخل الصفحة */
+        .a4-page.landscape {
+            width: 297mm;
+            height: 210mm;
+        }
+
+        /* تذييل الصفحة المخصص (التاريخ في الأسفل) */
+        .page-footer-date {
+            position: absolute;
+            bottom: 10mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            display: none; /* مخفي أثناء التعديل ويظهر عند الطباعة */
+            z-index: 2000;
+        }
+
         .canvas-element {
             position: absolute;
             cursor: move;
@@ -169,10 +217,95 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 10;
         }
 
         .canvas-element.selected {
             outline: 2px dashed #007bff;
+            z-index: 1000;
+        }
+
+        .canvas-element.selected .resize-handle,
+        .canvas-element.selected .rotate-handle {
+            display: flex;
+        }
+
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #007bff;
+            border: 1px solid #fff;
+            display: none;
+            z-index: 1001;
+            bottom: -5px;
+            right: -5px;
+            cursor: se-resize;
+        }
+
+        .rotate-handle {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: grab;
+            z-index: 1001;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .rotate-handle:active {
+            cursor: grabbing;
+        }
+
+        /* إعدادات الطباعة المتقدمة لإلغاء ترويسات المتصفح وإظهار التاريخ فقط بالأسفل */
+        @media print {
+            @page {
+                size: auto;
+                margin: 0mm; /* إلغاء هوامش المتصفح الافتراضية */
+            }
+            body {
+                background: none;
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            aside, .zoom-controls {
+                display: none !important;
+            }
+            main {
+                padding: 0 !important;
+                background: none !important;
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            .workspace-container {
+                transform: none !important;
+                margin: 0 !important;
+            }
+            .a4-page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                page-break-after: avoid;
+            }
+            .canvas-element.selected {
+                outline: none !important;
+            }
+            .resize-handle, .rotate-handle {
+                display: none !important;
+            }
+            .page-footer-date {
+                display: block !important; /* إظهار التاريخ حصراً عند الطباعة */
+            }
         }
     </style>
 </head>
@@ -182,75 +315,181 @@
     <aside>
         <h2>لوحة التحكم</h2>
 
-        <div class="control-group">
-            <label>انقر لإضافة الشكل فوراً</label>
-            <div class="btn-grid">
-                <button class="tool-btn" onclick="addShape('rect')">مربع ▢</button>
-                <button class="tool-btn" onclick="addShape('arrow')">سهم ➔</button>
-                <button class="tool-btn" onclick="addShape('line')">خط ⎯</button>
-                <button class="tool-btn" onclick="addShape('text')">نص 🔤</button>
+        <!-- اتجاه الصفحة A4 -->
+        <div class="section-box">
+            <label>اتجاه الصفحة</label>
+            <div class="control-group">
+                <select id="page-orientation" onchange="changePageOrientation()">
+                    <option value="portrait">عمودي (Portrait)</option>
+                    <option value="landscape">أفقي (Landscape)</option>
+                </select>
             </div>
         </div>
 
-        <div class="control-group" id="text-input-group">
-            <label for="custom-text">محتوى النص</label>
-            <input type="text" id="custom-text" value="أدخل النص هنا">
+        <!-- إدارة المشاريع المحفوظة -->
+        <div class="section-box">
+            <label>إدارة المشاريع والمحفوظات</label>
+            <div class="row-inputs">
+                <input type="text" id="project-name" placeholder="اسم المشروع...">
+                <button class="action-btn" onclick="saveProject()">حفظ</button>
+            </div>
+            <div class="control-group" style="margin-top: 5px;">
+                <label>المشاريع المحفوظة مسبقاً</label>
+                <select id="saved-projects-list" onchange="loadProject()">
+                    <option value="">-- اختر مشروعاً لاسترجاعه --</option>
+                </select>
+            </div>
+            <button class="action-btn pdf-btn" onclick="exportToPDF()" style="margin-top: 4px;">تصدير وحفظ كـ PDF 📄</button>
+            <button class="tool-btn danger-btn" onclick="deleteCurrentProject()" style="margin-top: 4px;">حذف المشروع المحدد</button>
         </div>
 
-        <div class="control-group">
-            <label for="line-width">سمك الخط / الإطار (بكسل)</label>
-            <input type="number" id="line-width" value="2" min="1" max="20">
+        <!-- إضافة الصور والشفافية -->
+        <div class="section-box">
+            <label>إدراج صورة</label>
+            <div class="control-group">
+                <input type="file" id="image-upload" accept="image/*" onchange="uploadImage(event)">
+            </div>
+            <div class="control-group">
+                <label>شفافية الصورة المحددة (0 إلى 1)</label>
+                <input type="number" id="image-opacity" value="1" min="0" max="1" step="0.1" oninput="updateImageOpacity()">
+            </div>
         </div>
 
-        <div class="control-group">
-            <label for="line-style">نمط الحدود</label>
-            <select id="line-style">
-                <option value="solid">متصل (Solid)</option>
-                <option value="dashed">متقطع (Dashed)</option>
-                <option value="dotted">منقط (Dotted)</option>
-            </select>
+        <!-- مكتبة الملصقات الجاهزة والملاحظات -->
+        <div class="section-box">
+            <label>مكتبة الملصقات والملاحظات</label>
+            <div class="control-group">
+                <select id="sticker-select">
+                    <option value="📝 ملاحظة فارغة (قابل للكتابة)">📝 ملاحظة فارغة (قابل للكتابة)</option>
+                    <option value="🔴 هام جداً">🔴 هام جداً</option>
+                    <option value="📌 ملاحظة هامة">📌 ملاحظة هامة</option>
+                    <option value="💡 فكرة إبداعية">💡 فكرة إبداعية</option>
+                    <option value="⚠️ تنبيه عاجل">⚠️ تنبيه عاجل</option>
+                    <option value="✅ تم المراجعة والاعتماد">✅ تم المراجعة والاعتماد</option>
+                    <option value="❌ مرفوض / تعديل">❌ مرفوض / تعديل</option>
+                    <option value="⭐ ممتاز / مميز">⭐ ممتاز / مميز</option>
+                    <option value="⏳ تحت الإنجاز">⏳ تحت الإنجاز</option>
+                    <option value="🔒 سري للغاية">🔒 سري للغاية</option>
+                    <option value="📅 موعد نهائي">📅 موعد نهائي</option>
+                </select>
+            </div>
+            <button class="tool-btn" style="background:#007bff; color:#fff;" onclick="addSticker()">إضافة الملصق المحدد</button>
         </div>
 
-        <div class="control-group">
-            <label for="font-family">نوع الخط (للنصوص)</label>
-            <select id="font-family">
-                <option value="Cairo">كاييرو (Cairo)</option>
-                <option value="Amiri">أميري (Amiri)</option>
-                <option value="Tahoma">تاهوما (Tahoma)</option>
-                <option value="Arial">أريال (Arial)</option>
-            </select>
+        <!-- إعدادات النصوص -->
+        <div class="section-box">
+            <label>إعدادات النصوص</label>
+            <div class="control-group">
+                <input type="text" id="custom-text" value="أدخل النص هنا">
+            </div>
+            <div class="row-inputs">
+                <div class="control-group">
+                    <label>حجم الخط</label>
+                    <input type="number" id="font-size" value="16" min="8" max="96" oninput="updateSelectedText()">
+                </div>
+                <div class="control-group">
+                    <label>نوع الخط</label>
+                    <select id="font-family" onchange="updateSelectedText()">
+                        <option value="Cairo">Cairo</option>
+                        <option value="Amiri">Amiri</option>
+                        <option value="Tajawal">Tajawal</option>
+                        <option value="Reem Kufi">Reem Kufi</option>
+                        <option value="Tahoma">Tahoma</option>
+                        <option value="Arial">Arial</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row-inputs">
+                <div class="control-group">
+                    <label>تباعد الأسطر</label>
+                    <input type="number" id="line-height" value="1.5" min="1" max="3" step="0.1" oninput="updateSelectedText()">
+                </div>
+                <div class="control-group">
+                    <label>محاذاة النص</label>
+                    <select id="text-align" onchange="updateSelectedText()">
+                        <option value="right">يمين</option>
+                        <option value="center">توسيط</option>
+                        <option value="left">يسار</option>
+                        <option value="justify">ضبط</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row-inputs">
+                <button class="tool-btn" onclick="toggleBold()" style="font-weight: bold; background: #e2e8f0;">B (تثخين)</button>
+                <button class="tool-btn" style="background:#007bff; color:#fff;" onclick="addShape('text')">إضافة نص</button>
+            </div>
         </div>
 
-        <div class="control-group">
-            <label for="element-color">اللون</label>
-            <input type="color" id="element-color" value="#000000" style="height: 35px; cursor: pointer; width: 100%;">
+        <!-- التنسيق والزوايا وإطارات الأشكال -->
+        <div class="section-box">
+            <label>التنسيق والإطار والزوايا</label>
+            <div class="row-inputs">
+                <div class="control-group">
+                    <label>لون الإطار / السهم</label>
+                    <input type="color" id="border-color" value="#000000" style="height: 30px; width: 100%; cursor: pointer;" oninput="updateSelectedStyle()">
+                </div>
+                <div class="control-group">
+                    <label>سماكة الإطار (بكسل)</label>
+                    <input type="number" id="border-width" value="2" min="1" max="20" oninput="updateSelectedStyle()">
+                </div>
+            </div>
+            <div class="row-inputs" style="margin-top: 4px;">
+                <div class="control-group">
+                    <label>لون التعبئة</label>
+                    <input type="color" id="fill-color" value="#e2e8f0" style="height: 30px; width: 100%; cursor: pointer;" oninput="updateSelectedStyle()">
+                </div>
+                <div class="control-group">
+                    <label>شفافية التعبئة</label>
+                    <input type="number" id="fill-opacity" value="0.5" min="0" max="1" step="0.1" oninput="updateSelectedStyle()">
+                </div>
+            </div>
+            <div class="control-group" style="margin-top: 4px;">
+                <button class="tool-btn" onclick="setNoFill()" style="background: #f1f5f9;">إلغاء التعبئة (بدون تعبئة)</button>
+            </div>
+            <div class="control-group" style="margin-top: 4px;">
+                <label>انحناء زوايا المربع</label>
+                <input type="range" id="corner-radius" min="0" max="50" value="0" style="cursor: pointer;" oninput="updateCornerRadius()">
+            </div>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #ddd;">
-        
-        <button class="action-btn" onclick="deleteSelectedElement()">حذف العنصر المحدد</button>
-        <button class="action-btn" style="background-color: #6c757d;" onclick="clearPage()">مسح الصفحة بالكامل</button>
+        <!-- الأشكال والأسهم (عادية ومفرغة) -->
+        <div class="section-box">
+            <label>إضافة أشكال وأسهم</label>
+            <div class="btn-grid">
+                <button class="tool-btn" onclick="addShape('rect')">مربع / مستطيل ▢</button>
+                <button class="tool-btn" onclick="addShape('circle')">دائرة ◯</button>
+                <button class="tool-btn" onclick="addShape('line')">خط ⎯</button>
+                <button class="tool-btn" onclick="addShape('arrow-right')">سهم يمين ➔</button>
+                <button class="tool-btn" onclick="addShape('arrow-left')">سهم يسار ⬅</button>
+                <button class="tool-btn" onclick="addShape('arrow-up')">سهم فوق ⬆</button>
+                <button class="tool-btn" onclick="addShape('arrow-down')">سهم تحت ⬇</button>
+                <button class="tool-btn" onclick="addShape('hollow-arrow-right')">سهم مفرغ ➔</button>
+                <button class="tool-btn" onclick="addShape('hollow-arrow-left')">سهم مفرغ ⬅</button>
+                <button class="tool-btn" onclick="addShape('hollow-arrow-up')">سهم مفرغ ⬆</button>
+                <button class="tool-btn" onclick="addShape('hollow-arrow-down')">سهم مفرغ ⬇</button>
+            </div>
+        </div>
+
+        <button class="tool-btn danger-btn" onclick="clearPage()">مسح الصفحة بالكامل</button>
     </aside>
 
     <!-- مساحة العمل وصفحة A4 (اليسار) -->
-    <main>
-        <!-- أداة الزووم -->
+    <main id="main-container">
         <div class="zoom-controls">
             <button onclick="zoomOut()">-</button>
             <span id="zoom-level">100%</span>
             <button onclick="zoomIn()">+</button>
         </div>
 
-        <!-- الحاوية القابلة للزووم -->
         <div class="workspace-container" id="workspace">
             <div class="a4-page" id="a4-page">
-                <!-- العناصر المرسومة ستظهر هنا ديناميكياً -->
+                <!-- تاريخ اليوم سيظهر هنا تلقائياً في أسفل الصفحة عند الطباعة -->
+                <div class="page-footer-date" id="print-date"></div>
             </div>
         </div>
     </main>
 
     <script>
-        // المتغيرات العامة
         let currentZoom = 1;
         let selectedElement = null;
 
@@ -258,93 +497,363 @@
         const zoomLevelText = document.getElementById('zoom-level');
         const a4Page = document.getElementById('a4-page');
 
-        // التحكم بالزووم
         function updateZoom() {
             workspace.style.transform = `scale(${currentZoom})`;
             zoomLevelText.innerText = Math.round(currentZoom * 100) + '%';
         }
 
-        function zoomIn() {
-            if (currentZoom < 2.5) {
-                currentZoom += 0.1;
-                updateZoom();
+        function zoomIn() { if (currentZoom < 2.5) { currentZoom += 0.1; updateZoom(); } }
+        function zoomOut() { if (currentZoom > 0.4) { currentZoom -= 0.1; updateZoom(); } }
+
+        function hexToRgba(hex, opacity) {
+            if (hex === 'transparent') return 'transparent';
+            let c;
+            if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+                c = hex.substring(1).split('');
+                if (c.length == 3) { c = [c[0], c[0], c[1], c[1], c[2], c[2]]; }
+                c = '0x' + c.join('');
+                return `rgba(${[(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',')},${opacity})`;
+            }
+            return `rgba(226, 232, 240, ${opacity})`;
+        }
+
+        function changePageOrientation() {
+            const orientation = document.getElementById('page-orientation').value;
+            if (orientation === 'landscape') {
+                a4Page.classList.add('landscape');
+            } else {
+                a4Page.classList.remove('landscape');
             }
         }
 
-        function zoomOut() {
-            if (currentZoom > 0.4) {
-                currentZoom -= 0.1;
-                updateZoom();
+        function saveProject() {
+            let name = document.getElementById('project-name').value.trim();
+            if (!name) {
+                alert('الرجاء إدخال اسم المشروع أولاً.');
+                return;
+            }
+            let projectData = {
+                html: a4Page.innerHTML,
+                orientation: document.getElementById('page-orientation').value
+            };
+            localStorage.setItem('schematic_project_' + name, JSON.stringify(projectData));
+            updateSavedProjectsList();
+            alert('تم حفظ المشروع بنجاح!');
+        }
+
+        function exportToPDF() {
+            if (selectedElement) {
+                selectedElement.classList.remove('selected');
+                selectedElement = null;
+            }
+            
+            // توليد تاريخ اليوم فقط (السنة/الشهر/اليوم) وتعبئته في تذييل الصفحة
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('print-date').innerText = `${year}/${month}/${day}`;
+
+            window.print();
+        }
+
+        function updateSavedProjectsList() {
+            let select = document.getElementById('saved-projects-list');
+            select.innerHTML = '<option value="">-- اختر مشروعاً لاسترجاعه --</option>';
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                if (key.startsWith('schematic_project_')) {
+                    let projName = key.replace('schematic_project_', '');
+                    let opt = document.createElement('option');
+                    opt.value = key;
+                    opt.innerText = projName;
+                    select.appendChild(opt);
+                }
             }
         }
 
-        // إضافة الشكل مباشرة عند النقر على الزر
-        function addShape(type) {
+        function loadProject() {
+            let key = document.getElementById('saved-projects-list').value;
+            if (!key) return;
+            let projectData = JSON.parse(localStorage.getItem(key));
+            if (projectData) {
+                a4Page.innerHTML = projectData.html;
+                document.getElementById('page-orientation').value = projectData.orientation;
+                changePageOrientation();
+                document.querySelectorAll('.canvas-element').forEach(el => makeInteractive(el));
+            }
+        }
+
+        function deleteCurrentProject() {
+            let select = document.getElementById('saved-projects-list');
+            let key = select.value;
+            if (!key) {
+                alert('الرجاء اختيار المشروع المراد حذفه من القائمة أولاً.');
+                return;
+            }
+            let projName = key.replace('schematic_project_', '');
+            if (confirm(`هل أنت متأكد من حذف المشروع "${projName}" نهائياً؟`)) {
+                localStorage.removeItem(key);
+                updateSavedProjectsList();
+                alert('تم حذف المشروع بنجاح.');
+            }
+        }
+
+        window.onload = function() {
+            updateSavedProjectsList();
+        };
+
+        function uploadImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const el = document.createElement('div');
+                el.className = 'canvas-element';
+                el.style.left = '60px';
+                el.style.top = '60px';
+                el.style.width = '180px';
+                el.style.height = '140px';
+                el.dataset.type = 'image';
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+                img.style.pointerEvents = 'none';
+
+                el.appendChild(img);
+                el.innerHTML += `<div class="resize-handle"></div><div class="rotate-handle" title="اسحب للتدوير">↻</div>`;
+
+                makeInteractive(el);
+                a4Page.appendChild(el);
+                selectElement(el);
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function updateImageOpacity() {
+            if (selectedElement && selectedElement.dataset.type === 'image') {
+                const opacity = document.getElementById('image-opacity').value;
+                selectedElement.style.opacity = opacity;
+            }
+        }
+
+        function addSticker() {
+            let stickerType = document.getElementById('sticker-select').value;
             const el = document.createElement('div');
             el.className = 'canvas-element';
-            
-            const borderWidth = document.getElementById('line-width').value;
-            const borderStyle = document.getElementById('line-style').value;
-            const borderColor = document.getElementById('element-color').value;
-            const fontFamily = document.getElementById('font-family').value;
+            el.style.left = '80px';
+            el.style.top = '80px';
+            el.style.width = '160px';
+            el.style.height = '90px';
+            el.style.padding = '8px 14px';
+            el.style.backgroundColor = '#fff3cd';
+            el.style.border = '1px solid #ffeeba';
+            el.style.borderRadius = '8px';
+            el.style.fontSize = '14px';
+            el.style.fontWeight = 'bold';
+            el.style.color = '#856404';
+            el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+            el.contentEditable = "true";
+            el.dataset.type = 'sticker';
 
-            // مكان ظهور العنصر الافتراضي داخل الصفحة
-            el.style.left = '50px';
-            el.style.top = '50px';
-
-            if (type === 'rect') {
-                el.style.width = '150px';
-                el.style.height = '100px';
-                el.style.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
-                el.style.backgroundColor = 'transparent';
-            } else if (type === 'line') {
-                el.style.width = '200px';
-                el.style.height = `${borderWidth}px`;
-                el.style.backgroundColor = borderColor;
-            } else if (type === 'arrow') {
-                el.style.width = '120px';
-                el.style.height = '40px';
-                el.innerHTML = `<svg width="120" height="40" viewBox="0 0 120 40"><line x1="0" y1="20" x2="110" y2="20" stroke="${borderColor}" stroke-width="${borderWidth}" stroke-dasharray="${borderStyle === 'dashed' ? '5,5' : borderStyle === 'dotted' ? '2,2' : 'none'}" /><polygon points="110,15 120,20 110,25" fill="${borderColor}"/></svg>`;
-            } else if (type === 'text') {
-                const textContent = document.getElementById('custom-text').value;
-                el.style.padding = '5px';
-                el.style.fontFamily = fontFamily;
-                el.style.fontSize = '16px';
-                el.style.color = borderColor;
-                el.innerText = textContent;
+            if (stickerType.includes('ملاحظة فارغة')) {
+                el.innerText = 'اكتب ملاحظتك هنا...';
+            } else {
+                el.innerText = stickerType;
             }
 
-            // تفعيل السحب والإفلات للتحريك
-            makeDraggable(el);
+            el.innerHTML += `<div class="resize-handle"></div><div class="rotate-handle" title="اسحب للتدوير">↻</div>`;
 
+            makeInteractive(el);
             a4Page.appendChild(el);
             selectElement(el);
         }
 
-        // وظيفة تحريك العناصر بالماوس داخل الصفحة
-        function makeDraggable(element) {
+        function addShape(type) {
+            const el = document.createElement('div');
+            el.className = 'canvas-element';
+            
+            const borderColor = document.getElementById('border-color').value;
+            const borderWidth = document.getElementById('border-width').value + 'px';
+            const fillColorHex = document.getElementById('fill-color').value;
+            const fillOpacity = document.getElementById('fill-opacity').value;
+            const fillColor = hexToRgba(fillColorHex, fillOpacity);
+
+            el.style.left = '60px';
+            el.style.top = '60px';
+            el.style.width = '150px';
+            el.style.height = '100px';
+
+            if (type === 'rect') {
+                el.style.border = `${borderWidth} solid ${borderColor}`;
+                el.style.backgroundColor = fillColor;
+                el.dataset.type = 'shape';
+            } else if (type === 'circle') {
+                el.style.width = '120px';
+                el.style.height = '120px';
+                el.style.border = `${borderWidth} solid ${borderColor}`;
+                el.style.borderRadius = '50%';
+                el.style.backgroundColor = fillColor;
+                el.dataset.type = 'circle';
+            } else if (type === 'line') {
+                el.style.height = document.getElementById('border-width').value + 'px';
+                el.style.backgroundColor = borderColor;
+                el.dataset.type = 'line';
+            } else if (type === 'arrow-right') {
+                let sw = document.getElementById('border-width').value;
+                el.style.height = '40px';
+                el.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 150 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="130" y2="20" stroke="${borderColor}" stroke-width="${sw}" /><polygon points="125,12 150,20 125,28" fill="${borderColor}" stroke="${borderColor}" stroke-width="${sw}"/></svg>`;
+                el.dataset.type = 'arrow';
+            } else if (type === 'arrow-left') {
+                let sw = document.getElementById('border-width').value;
+                el.style.height = '40px';
+                el.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 150 40" preserveAspectRatio="none"><line x1="150" y1="20" x2="20" y2="20" stroke="${borderColor}" stroke-width="${sw}" /><polygon points="25,12 0,20 25,28" fill="${borderColor}" stroke="${borderColor}" stroke-width="${sw}"/></svg>`;
+                el.dataset.type = 'arrow';
+            } else if (type === 'arrow-up') {
+                let sw = document.getElementById('border-width').value;
+                el.style.width = '40px';
+                el.style.height = '150px';
+                el.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 40 150" preserveAspectRatio="none"><line x1="20" y1="150" x2="20" y2="20" stroke="${borderColor}" stroke-width="${sw}" /><polygon points="12,25 20,0 28,25" fill="${borderColor}" stroke="${borderColor}" stroke-width="${sw}"/></svg>`;
+                el.dataset.type = 'arrow';
+            } else if (type === 'arrow-down') {
+                let sw = document.getElementById('border-width').value;
+                el.style.width = '40px';
+                el.style.height = '150px';
+                el.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 40 150" preserveAspectRatio="none"><line x1="20" y1="0" x2="20" y2="130" stroke="${borderColor}" stroke-width="${sw}" /><polygon points="12,125 20,150 28,125" fill="${borderColor}" stroke="${borderColor}" stroke-width="${sw}"/></svg>`;
+                el.dataset.type = 'arrow';
+            } else if (type === 'hollow-arrow-right') {
+                let sw = document.getElementById('border-width').value;
+                el.style.height = '50px';
+                el.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 150 50" preserveAspectRatio="none"><polygon points="0,18 115,18 115,5 150,25 115,45 115,32 0,32" fill="${fillColor}" stroke="${borderColor}" stroke-width="${sw}"/></svg>`;
+                el.dataset.type = 'hollow-arrow';
+            } else if (type === 'hollow-arrow-left') {
+                let sw = document.getElementById('border-width').value;
+                el.style.height = '50px';
+                el.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 150 50" preserveAspectRatio="none"><polygon points="150,18 35,18 35,5 0,25 35,45 35,32 150,32" fill="${fillColor}" stroke="${borderColor}" stroke-width="${sw}"/></svg>`;
+                el.dataset.type = 'hollow-arrow';
+            } else if (type === 'hollow-arrow-up') {
+                let sw = document.getElementById('border-width').value;
+                el.style.width = '50px';
+                el.style.height = '150px';
+                el.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 150 150" preserveAspectRatio="none"><polygon points="18,150 18,35 5,35 25,0 45,35 32,35 32,150" fill="${fillColor}" stroke="${borderColor}" stroke-width="${sw}"/></svg>`;
+                el.dataset.type = 'hollow-arrow';
+            } else if (type === 'hollow-arrow-down') {
+                let sw = document.getElementById('border-width').value;
+                el.style.width = '50px';
+                el.style.height = '150px';
+                el.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 150 150" preserveAspectRatio="none"><polygon points="18,0 18,115 5,115 25,150 45,115 32,115 32,0" fill="${fillColor}" stroke="${borderColor}" stroke-width="${sw}"/></svg>`;
+                el.dataset.type = 'hollow-arrow';
+            } else if (type === 'text') {
+                const textContent = document.getElementById('custom-text').value;
+                const fontSize = document.getElementById('font-size').value + 'px';
+                const fontFamily = document.getElementById('font-family').value;
+                const lineHeight = document.getElementById('line-height').value;
+                const textAlign = document.getElementById('text-align').value;
+
+                el.style.width = '200px';
+                el.style.height = 'auto';
+                el.style.padding = '5px';
+                el.style.fontFamily = fontFamily;
+                el.style.fontSize = fontSize;
+                el.style.lineHeight = lineHeight;
+                el.style.textAlign = textAlign;
+                el.style.color = borderColor;
+                el.style.whiteSpace = 'pre-wrap';
+                el.contentEditable = "true";
+                el.dataset.type = 'text';
+                el.innerText = textContent;
+            }
+
+            el.innerHTML += `<div class="resize-handle"></div><div class="rotate-handle" title="اسحب للتدوير">↻</div>`;
+
+            makeInteractive(el);
+            a4Page.appendChild(el);
+            selectElement(el);
+        }
+
+        function setNoFill() {
+            if (selectedElement && (selectedElement.dataset.type === 'shape' || selectedElement.dataset.type === 'circle' || selectedElement.dataset.type === 'hollow-arrow')) {
+                selectedElement.style.backgroundColor = 'transparent';
+                let svg = selectedElement.querySelector('svg');
+                if (svg) {
+                    svg.querySelectorAll('polygon').forEach(p => p.setAttribute('fill', 'transparent'));
+                }
+            }
+        }
+
+        function makeInteractive(element) {
             let isDragging = false;
-            let startX, startY;
+            let isResizing = false;
+            let isRotating = false;
+            let startX, startY, startWidth, startHeight;
+            let currentAngle = 0;
 
             element.addEventListener('mousedown', function(e) {
-                e.stopPropagation();
+                if (e.target.classList.contains('resize-handle')) {
+                    isResizing = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startWidth = element.offsetWidth;
+                    startHeight = element.offsetHeight;
+                    e.stopPropagation();
+                    return;
+                }
+                if (e.target.classList.contains('rotate-handle') || e.target.closest('.rotate-handle')) {
+                    isRotating = true;
+                    e.stopPropagation();
+                    return;
+                }
+                
                 selectElement(element);
                 isDragging = true;
-                startX = e.clientX - element.offsetLeft;
-                startY = e.clientY - element.offsetTop;
+                startX = e.clientX - element.offsetLeft * currentZoom;
+                startY = e.clientY - element.offsetTop * currentZoom;
             });
 
             document.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                let newX = e.clientX - startX;
-                let newY = e.clientY - startY;
-                
-                element.style.left = newX + 'px';
-                element.style.top = newY + 'px';
+                if (isDragging) {
+                    let newX = (e.clientX - startX) / currentZoom;
+                    let newY = (e.clientY - startY) / currentZoom;
+                    element.style.left = newX + 'px';
+                    element.style.top = newY + 'px';
+                } else if (isResizing) {
+                    let dx = (e.clientX - startX) / currentZoom;
+                    let dy = (e.clientY - startY) / currentZoom;
+                    
+                    if (element.dataset.type === 'circle') {
+                        let newSize =Math.max(20, startWidth + Math.max(dx, dy));
+                        element.style.width = newSize + 'px';
+                        element.style.height = newSize + 'px';
+                    } else {
+                        element.style.width = Math.max(20, startWidth + dx) + 'px';
+                        element.style.height = Math.max(20, startHeight + dy) + 'px';
+                    }
+                } else if (isRotating) {
+                    const rect = element.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    const radians = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                    let degrees = (radians * (180 / Math.PI)) + 90;
+
+                    let snapThreshold = 5;
+                    let nearest90 = Math.round(degrees / 90) * 90;
+                    if (Math.abs(degrees - nearest90) < snapThreshold) {
+                        degrees = nearest90;
+                    }
+
+                    currentAngle = degrees;
+                    element.style.transform = `rotate(${currentAngle}deg)`;
+                }
             });
 
             document.addEventListener('mouseup', function() {
                 isDragging = false;
+                isResizing = false;
+                isRotating = false;
             });
         }
 
@@ -352,9 +861,81 @@
             document.querySelectorAll('.canvas-element').forEach(el => el.classList.remove('selected'));
             selectedElement = element;
             selectedElement.classList.add('selected');
+
+            if (selectedElement.dataset.type === 'text' || selectedElement.dataset.type === 'sticker') {
+                document.getElementById('custom-text').value = selectedElement.innerText.trim();
+                document.getElementById('font-size').value = parseInt(window.getComputedStyle(selectedElement).fontSize);
+                document.getElementById('line-height').value = window.getComputedStyle(selectedElement).lineHeight === 'normal' ? 1.2 : parseFloat(window.getComputedStyle(selectedElement).lineHeight) / parseInt(window.getComputedStyle(selectedElement).fontSize);
+            } else if (selectedElement.dataset.type === 'image') {
+                let currentOpacity = window.getComputedStyle(selectedElement).opacity;
+                document.getElementById('image-opacity').value = currentOpacity;
+            }
         }
 
-        // إلغاء التحديد عند النقر على خلفية الصفحة البيضاء
+        function updateSelectedText() {
+            if (selectedElement && (selectedElement.dataset.type === 'text' || selectedElement.dataset.type === 'sticker')) {
+                selectedElement.innerText = document.getElementById('custom-text').value;
+                selectedElement.style.fontSize = document.getElementById('font-size').value + 'px';
+                selectedElement.style.fontFamily = document.getElementById('font-family').value;
+                selectedElement.style.lineHeight = document.getElementById('line-height').value;
+                selectedElement.style.textAlign = document.getElementById('text-align').value;
+            }
+        }
+
+        function toggleBold() {
+            if (selectedElement && (selectedElement.dataset.type === 'text' || selectedElement.dataset.type === 'sticker')) {
+                let currentWeight = window.getComputedStyle(selectedElement).fontWeight;
+                selectedElement.style.fontWeight = (currentWeight > 600 || currentWeight === 'bold') ? 'normal' : 'bold';
+            }
+        }
+
+        function updateSelectedStyle() {
+            if (selectedElement) {
+                const borderColor = document.getElementById('border-color').value;
+                const borderWidth = document.getElementById('border-width').value + 'px';
+                const fillColorHex = document.getElementById('fill-color').value;
+                const fillOpacity = document.getElementById('fill-opacity').value;
+                const sw = document.getElementById('border-width').value;
+                
+                if (selectedElement.dataset.type === 'shape' || selectedElement.dataset.type === 'circle') {
+                    selectedElement.style.border = `${borderWidth} solid ${borderColor}`;
+                    selectedElement.style.backgroundColor = hexToRgba(fillColorHex, fillOpacity);
+                } else if (selectedElement.dataset.type === 'line') {
+                    selectedElement.style.height = borderWidth;
+                    selectedElement.style.backgroundColor = borderColor;
+                } else if (selectedElement.dataset.type === 'arrow') {
+                    let svg = selectedElement.querySelector('svg');
+                    if (svg) {
+                        svg.querySelectorAll('line').forEach(l => {
+                            l.setAttribute('stroke', borderColor);
+                            l.setAttribute('stroke-width', sw);
+                        });
+                        svg.querySelectorAll('polygon').forEach(p => {
+                            p.setAttribute('stroke', borderColor);
+                            p.setAttribute('fill', borderColor);
+                            p.setAttribute('stroke-width', sw);
+                        });
+                    }
+                } else if (selectedElement.dataset.type === 'hollow-arrow') {
+                    let svg = selectedElement.querySelector('svg');
+                    if (svg) {
+                        svg.querySelectorAll('polygon').forEach(p => {
+                            p.setAttribute('stroke', borderColor);
+                            p.setAttribute('fill', hexToRgba(fillColorHex, fillOpacity));
+                            p.setAttribute('stroke-width', sw);
+                        });
+                    }
+                }
+            }
+        }
+
+        function updateCornerRadius() {
+            if (selectedElement && selectedElement.dataset.type === 'shape') {
+                const radius = document.getElementById('corner-radius').value;
+                selectedElement.style.borderRadius = radius + 'px';
+            }
+        }
+
         a4Page.addEventListener('click', function(e) {
             if (e.target === a4Page) {
                 if (selectedElement) {
@@ -364,20 +945,18 @@
             }
         });
 
-        // زر الحذف
-        function deleteSelectedElement() {
-            if (selectedElement) {
-                selectedElement.remove();
-                selectedElement = null;
-            } else {
-                alert('الرجاء اختيار عنصر أولاً لحذفه.');
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (selectedElement && document.activeElement.tagName !== 'INPUT' && document.activeElement.contentEditable !== "true") {
+                    selectedElement.remove();
+                    selectedElement = null;
+                }
             }
-        }
+        });
 
-        // مسح الصفحة بالكامل
         function clearPage() {
             if (confirm('هل أنت متأكد من مسح كافة العناصر في الصفحة؟')) {
-                a4Page.innerHTML = '';
+                a4Page.innerHTML = '<div class="page-footer-date" id="print-date"></div>';
                 selectedElement = null;
             }
         }
