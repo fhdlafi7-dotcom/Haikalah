@@ -12,8 +12,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        /* تعديل التصميم ليكون جنباً إلى جنب بشكل دائم وثابت */
         body {
             display: flex;
+            flex-direction: row-reverse; /* لوحة التحكم يميناً ومساحة العمل يساراً */
             height: 100vh;
             background-color: #f0f2f5;
             overflow: hidden;
@@ -206,7 +208,7 @@
             text-align: center;
             font-size: 11px;
             color: #666;
-            display: none; /* مخفي أثناء التعديل ويظهر عند الطباعة */
+            display: none;
             z-index: 2000;
         }
 
@@ -266,11 +268,11 @@
             cursor: grabbing;
         }
 
-        /* إعدادات الطباعة المتقدمة لإلغاء ترويسات المتصفح وإظهار التاريخ فقط بالأسفل */
+        /* إعدادات الطباعة والتصدير */
         @media print {
             @page {
                 size: auto;
-                margin: 0mm; /* إلغاء هوامش المتصفح الافتراضية */
+                margin: 0mm;
             }
             body {
                 background: none;
@@ -304,7 +306,7 @@
                 display: none !important;
             }
             .page-footer-date {
-                display: block !important; /* إظهار التاريخ حصراً عند الطباعة */
+                display: block !important;
             }
         }
     </style>
@@ -315,7 +317,6 @@
     <aside>
         <h2>لوحة التحكم</h2>
 
-        <!-- اتجاه الصفحة A4 -->
         <div class="section-box">
             <label>اتجاه الصفحة</label>
             <div class="control-group">
@@ -326,7 +327,6 @@
             </div>
         </div>
 
-        <!-- إدارة المشاريع المحفوظة -->
         <div class="section-box">
             <label>إدارة المشاريع والمحفوظات</label>
             <div class="row-inputs">
@@ -343,7 +343,6 @@
             <button class="tool-btn danger-btn" onclick="deleteCurrentProject()" style="margin-top: 4px;">حذف المشروع المحدد</button>
         </div>
 
-        <!-- إضافة الصور والشفافية -->
         <div class="section-box">
             <label>إدراج صورة</label>
             <div class="control-group">
@@ -355,7 +354,6 @@
             </div>
         </div>
 
-        <!-- مكتبة الملصقات الجاهزة والملاحظات -->
         <div class="section-box">
             <label>مكتبة الملصقات والملاحظات</label>
             <div class="control-group">
@@ -376,7 +374,6 @@
             <button class="tool-btn" style="background:#007bff; color:#fff;" onclick="addSticker()">إضافة الملصق المحدد</button>
         </div>
 
-        <!-- إعدادات النصوص -->
         <div class="section-box">
             <label>إعدادات النصوص</label>
             <div class="control-group">
@@ -420,7 +417,6 @@
             </div>
         </div>
 
-        <!-- التنسيق والزوايا وإطارات الأشكال -->
         <div class="section-box">
             <label>التنسيق والإطار والزوايا</label>
             <div class="row-inputs">
@@ -452,7 +448,6 @@
             </div>
         </div>
 
-        <!-- الأشكال والأسهم (عادية ومفرغة) -->
         <div class="section-box">
             <label>إضافة أشكال وأسهم</label>
             <div class="btn-grid">
@@ -483,7 +478,6 @@
 
         <div class="workspace-container" id="workspace">
             <div class="a4-page" id="a4-page">
-                <!-- تاريخ اليوم سيظهر هنا تلقائياً في أسفل الصفحة عند الطباعة -->
                 <div class="page-footer-date" id="print-date"></div>
             </div>
         </div>
@@ -547,7 +541,6 @@
                 selectedElement = null;
             }
             
-            // توليد تاريخ اليوم فقط (السنة/الشهر/اليوم) وتعبئته في تذييل الصفحة
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -825,7 +818,7 @@
                     let dy = (e.clientY - startY) / currentZoom;
                     
                     if (element.dataset.type === 'circle') {
-                        let newSize =Math.max(20, startWidth + Math.max(dx, dy));
+                        let newSize = Math.max(20, startWidth + Math.max(dx, dy));
                         element.style.width = newSize + 'px';
                         element.style.height = newSize + 'px';
                     } else {
@@ -957,6 +950,7 @@
         function clearPage() {
             if (confirm('هل أنت متأكد من مسح كافة العناصر في الصفحة؟')) {
                 a4Page.innerHTML = '<div class="page-footer-date" id="print-date"></div>';
+                selectedElement.value = null;
                 selectedElement = null;
             }
         }
