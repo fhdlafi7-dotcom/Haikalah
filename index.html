@@ -12,7 +12,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* تثبيت الصفحة بالكامل لمنع الالتفاف أو النزول للأسفل */
         body {
             width: 100vw;
             height: 100vh;
@@ -21,7 +20,6 @@
             overflow: hidden;
         }
 
-        /* لوحة التحكم ثابتة تماماً على اليمين */
         aside {
             position: absolute;
             top: 0;
@@ -144,12 +142,11 @@
             background-color: #c82333;
         }
 
-        /* مساحة العمل تأخذ المساحة المتبقية على اليسار تماماً */
         main {
             position: absolute;
             top: 0;
             left: 0;
-            right: 360px; /* ترك مساحة لوحة التحكم يميناً */
+            right: 360px;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -203,7 +200,29 @@
             height: 210mm;
         }
 
-        /* تذييل الصفحة المخصص (التاريخ في الأسفل عند الطباعة) */
+        /* خطوط المحاذاة الوهمية المساعدة */
+        .alignment-guide-h {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            border-top: 1px dashed #007bff;
+            z-index: 9999;
+            pointer-events: none;
+            display: none;
+        }
+
+        .alignment-guide-v {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            border-left: 1px dashed #007bff;
+            z-index: 9999;
+            pointer-events: none;
+            display: none;
+        }
+
         .page-footer-date {
             position: absolute;
             bottom: 10mm;
@@ -272,7 +291,6 @@
             cursor: grabbing;
         }
 
-        /* إعدادات الطباعة والتصدير */
         @media print {
             @page {
                 size: auto;
@@ -285,7 +303,7 @@
                 overflow: visible;
                 width: auto;
             }
-            aside, .zoom-controls {
+            aside, .zoom-controls, .alignment-guide-h, .alignment-guide-v {
                 display: none !important;
             }
             main {
@@ -321,7 +339,6 @@
 </head>
 <body>
 
-    <!-- لوحة التحكم (اليمين) -->
     <aside>
         <h2>لوحة التحكم</h2>
 
@@ -383,7 +400,7 @@
         </div>
 
         <div class="section-box">
-            <label>إعدادات النصوص</label>
+            <label>إعدادات النصوص والألوان العامة</label>
             <div class="control-group">
                 <input type="text" id="custom-text" value="أدخل النص هنا">
             </div>
@@ -426,10 +443,10 @@
         </div>
 
         <div class="section-box">
-            <label>التنسيق والإطار والزوايا</label>
+            <label>التنسيق والإطار والألوان</label>
             <div class="row-inputs">
                 <div class="control-group">
-                    <label>لون الإطار / السهم</label>
+                    <label>لون الخط / الإطار / السهم</label>
                     <input type="color" id="border-color" value="#000000" style="height: 30px; width: 100%; cursor: pointer;" oninput="updateSelectedStyle()">
                 </div>
                 <div class="control-group">
@@ -476,7 +493,6 @@
         <button class="tool-btn danger-btn" onclick="clearPage()">مسح الصفحة بالكامل</button>
     </aside>
 
-    <!-- مساحة العمل وصفحة A4 (اليسار) -->
     <main id="main-container">
         <div class="zoom-controls">
             <button onclick="zoomOut()">-</button>
@@ -486,6 +502,8 @@
 
         <div class="workspace-container" id="workspace">
             <div class="a4-page" id="a4-page">
+                <div class="alignment-guide-h" id="guide-h"></div>
+                <div class="alignment-guide-v" id="guide-v"></div>
                 <div class="page-footer-date" id="print-date"></div>
             </div>
         </div>
@@ -498,6 +516,8 @@
         const workspace = document.getElementById('workspace');
         const zoomLevelText = document.getElementById('zoom-level');
         const a4Page = document.getElementById('a4-page');
+        const guideH = document.getElementById('guide-h');
+        const guideV = document.getElementById('guide-v');
 
         function updateZoom() {
             workspace.style.transform = `scale(${currentZoom})`;
@@ -819,6 +839,38 @@
                 if (isDragging) {
                     let newX = (e.clientX - startX) / currentZoom;
                     let newY = (e.clientY - startY) / currentZoom;
+
+                    let snapThreshold = 5;
+                    let otherElements = document.querySelectorAll('.canvas-element');
+                    let snappedX = false;
+                    let snappedY = false;
+
+                    otherElements.forEach(other => {
+                        if (other === element) return;
+                        let oLeft = other.offsetLeft;
+                        let oTop = other.offsetTop;
+                        let oCenterX = oLeft + other.offsetWidth / 2;
+                        let oCenterY = oTop + other.offsetHeight / 2;
+
+                        let myWidth = element.offsetWidth;
+                        let myHeight = element.offsetHeight;
+                        let myCenterX = newX + myWidth / 2;
+                        let myCenterY = newY + myHeight / 2;
+
+                        // محاذاة أفقية (الوسط أو الأطراف)
+                        if (Math.abs(newY - oTop) < snapThreshold) { newY = oTop; snappedY = true; showGuideH(oTop); }
+                        else if (Math.abs(myCenterY - oCenterY) < snapThreshold) { newY = oCenterY - myHeight / 2; snappedY = true; showGuideH(oCenterY); }
+                        else if (Math.abs((newY + myHeight) - (oTop + other.offsetHeight)) < snapThreshold) { newY = oTop + other.offsetHeight - myHeight; snappedY = true; showGuideH(oTop + other.offsetHeight); }
+
+                        // محاذاة عمودية (الوسط أو الأطراف)
+                        if (Math.abs(newX - oLeft) < snapThreshold) { newX = oLeft; snappedX = true; showGuideV(oLeft); }
+                        else if (Math.abs(myCenterX - oCenterX) < snapThreshold) { newX = oCenterX - myWidth / 2; snappedX = true; showGuideV(oCenterX); }
+                        else if (Math.abs((newX + myWidth) - (oLeft + other.offsetWidth)) < snapThreshold) { newX = oLeft + other.offsetWidth - myWidth; snappedX = true; showGuideV(oLeft + other.offsetWidth); }
+                    });
+
+                    if (!snappedY) hideGuideH();
+                    if (!snappedX) hideGuideV();
+
                     element.style.left = newX + 'px';
                     element.style.top = newY + 'px';
                 } else if (isResizing) {
@@ -855,8 +907,22 @@
                 isDragging = false;
                 isResizing = false;
                 isRotating = false;
+                hideGuideH();
+                hideGuideV();
             });
         }
+
+        function showGuideH(y) {
+            guideH.style.top = y + 'px';
+            guideH.style.display = 'block';
+        }
+        function hideGuideH() { guideH.style.display = 'none'; }
+
+        function showGuideV(x) {
+            guideV.style.left = x + 'px';
+            guideV.style.display = 'block';
+        }
+        function hideGuideV() { guideV.style.display = 'none'; }
 
         function selectElement(element) {
             document.querySelectorAll('.canvas-element').forEach(el => el.classList.remove('selected'));
@@ -867,10 +933,27 @@
                 document.getElementById('custom-text').value = selectedElement.innerText.trim();
                 document.getElementById('font-size').value = parseInt(window.getComputedStyle(selectedElement).fontSize);
                 document.getElementById('line-height').value = window.getComputedStyle(selectedElement).lineHeight === 'normal' ? 1.2 : parseFloat(window.getComputedStyle(selectedElement).lineHeight) / parseInt(window.getComputedStyle(selectedElement).fontSize);
+                document.getElementById('border-color').value = rgbToHex(window.getComputedStyle(selectedElement).color);
             } else if (selectedElement.dataset.type === 'image') {
                 let currentOpacity = window.getComputedStyle(selectedElement).opacity;
                 document.getElementById('image-opacity').value = currentOpacity;
+            } else if (selectedElement.dataset.type === 'shape' || selectedElement.dataset.type === 'circle') {
+                let borderColor = rgbToHex(window.getComputedStyle(selectedElement).borderColor);
+                if (borderColor) document.getElementById('border-color').value = borderColor;
+            } else if (selectedElement.dataset.type === 'line') {
+                let bg = rgbToHex(window.getComputedStyle(selectedElement).backgroundColor);
+                if (bg) document.getElementById('border-color').value = bg;
             }
+        }
+
+        function rgbToHex(rgb) {
+            if (!rgb || rgb === 'transparent') return '#000000';
+            let match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+            if (!match) return '#000000';
+            function hex(x) {
+                return ("0" + parseInt(x).toString(16)).slice(-2);
+            }
+            return "#" + hex(match[1]) + hex(match[2]) + hex(match[3]);
         }
 
         function updateSelectedText() {
@@ -904,6 +987,8 @@
                 } else if (selectedElement.dataset.type === 'line') {
                     selectedElement.style.height = borderWidth;
                     selectedElement.style.backgroundColor = borderColor;
+                } else if (selectedElement.dataset.type === 'text' || selectedElement.dataset.type === 'sticker') {
+                    selectedElement.style.color = borderColor;
                 } else if (selectedElement.dataset.type === 'arrow') {
                     let svg = selectedElement.querySelector('svg');
                     if (svg) {
@@ -946,18 +1031,38 @@
             }
         });
 
+        // تحسين دعم الحذف والتحريك بالأسهم
         document.addEventListener('keydown', function(e) {
+            const isInputActive = document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.contentEditable === "true";
+            
+            if (!selectedElement || isInputActive) return;
+
+            let step = e.shiftKey ? 10 : 1;
+            let currentLeft = selectedElement.offsetLeft;
+            let currentTop = selectedElement.offsetTop;
+
             if (e.key === 'Delete' || e.key === 'Backspace') {
-                if (selectedElement && document.activeElement.tagName !== 'INPUT' && document.activeElement.contentEditable !== "true") {
-                    selectedElement.remove();
-                    selectedElement = null;
-                }
+                selectedElement.remove();
+                selectedElement = null;
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                selectedElement.style.left = (currentLeft + step) + 'px';
+                e.preventDefault();
+            } else if (e.key === 'ArrowLeft') {
+                selectedElement.style.left = (currentLeft - step) + 'px';
+                e.preventDefault();
+            } else if (e.key === 'ArrowUp') {
+                selectedElement.style.top = (currentTop - step) + 'px';
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                selectedElement.style.top = (currentTop + step) + 'px';
+                e.preventDefault();
             }
         });
 
         function clearPage() {
             if (confirm('هل أنت متأكد من مسح كافة العناصر في الصفحة؟')) {
-                a4Page.innerHTML = '<div class="page-footer-date" id="print-date"></div>';
+                a4Page.innerHTML = '<div class="alignment-guide-h" id="guide-h"></div><div class="alignment-guide-v" id="guide-v"></div><div class="page-footer-date" id="print-date"></div>';
                 selectedElement = null;
             }
         }
