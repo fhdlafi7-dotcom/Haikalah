@@ -200,7 +200,6 @@
             height: 210mm;
         }
 
-        /* خطوط المحاذاة الوهمية المساعدة */
         .alignment-guide-h {
             position: absolute;
             left: 0;
@@ -400,7 +399,7 @@
         </div>
 
         <div class="section-box">
-            <label>إعدادات النصوص والألوان العامة</label>
+            <label>إعدادات وتنسيق النصوص (انقر مرتين على النص لتعديله)</label>
             <div class="control-group">
                 <input type="text" id="custom-text" value="أدخل النص هنا">
             </div>
@@ -423,8 +422,8 @@
             </div>
             <div class="row-inputs">
                 <div class="control-group">
-                    <label>تباعد الأسطر</label>
-                    <input type="number" id="line-height" value="1.5" min="1" max="3" step="0.1" oninput="updateSelectedText()">
+                    <label>لون النص</label>
+                    <input type="color" id="text-color" value="#000000" style="height: 30px; width: 100%; cursor: pointer;" oninput="updateSelectedText()">
                 </div>
                 <div class="control-group">
                     <label>محاذاة النص</label>
@@ -436,17 +435,23 @@
                     </select>
                 </div>
             </div>
-            <div class="row-inputs">
-                <button class="tool-btn" onclick="toggleBold()" style="font-weight: bold; background: #e2e8f0;">B (تثخين)</button>
-                <button class="tool-btn" style="background:#007bff; color:#fff;" onclick="addShape('text')">إضافة نص</button>
+            <div class="row-inputs" style="margin-top: 4px;">
+                <div class="control-group">
+                    <label>تباعد الأسطر</label>
+                    <input type="number" id="line-height" value="1.5" min="1" max="3" step="0.1" oninput="updateSelectedText()">
+                </div>
+                <div class="control-group" style="justify-content: flex-end;">
+                    <button class="tool-btn" onclick="toggleBold()" style="font-weight: bold; background: #e2e8f0; height: 32px;">B (تثخين)</button>
+                </div>
             </div>
+            <button class="tool-btn" style="background:#007bff; color:#fff; margin-top: 4px;" onclick="addShape('text')">إضافة نص جديد</button>
         </div>
 
         <div class="section-box">
-            <label>التنسيق والإطار والألوان</label>
+            <label>التنسيق والإطار والأشكال</label>
             <div class="row-inputs">
                 <div class="control-group">
-                    <label>لون الخط / الإطار / السهم</label>
+                    <label>لون الإطار / السهم</label>
                     <input type="color" id="border-color" value="#000000" style="height: 30px; width: 100%; cursor: pointer;" oninput="updateSelectedStyle()">
                 </div>
                 <div class="control-group">
@@ -678,7 +683,6 @@
             el.style.fontWeight = 'bold';
             el.style.color = '#856404';
             el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-            el.contentEditable = "true";
             el.dataset.type = 'sticker';
 
             if (stickerType.includes('ملاحظة فارغة')) {
@@ -774,6 +778,7 @@
                 const fontFamily = document.getElementById('font-family').value;
                 const lineHeight = document.getElementById('line-height').value;
                 const textAlign = document.getElementById('text-align').value;
+                const textColor = document.getElementById('text-color').value;
 
                 el.style.width = '200px';
                 el.style.height = 'auto';
@@ -782,9 +787,8 @@
                 el.style.fontSize = fontSize;
                 el.style.lineHeight = lineHeight;
                 el.style.textAlign = textAlign;
-                el.style.color = borderColor;
+                el.style.color = textColor;
                 el.style.whiteSpace = 'pre-wrap';
-                el.contentEditable = "true";
                 el.dataset.type = 'text';
                 el.innerText = textContent;
             }
@@ -813,7 +817,22 @@
             let startX, startY, startWidth, startHeight;
             let currentAngle = 0;
 
+            // فتح محرر النص عند النقر المزدوج فقط لضمان سهولة التحديد والحذف
+            element.addEventListener('dblclick', function(e) {
+                if (element.dataset.type === 'text' || element.dataset.type === 'sticker') {
+                    element.contentEditable = "true";
+                    element.focus();
+                    e.stopPropagation();
+                }
+            });
+
+            element.addEventListener('blur', function() {
+                element.contentEditable = "false";
+            }, true);
+
             element.addEventListener('mousedown', function(e) {
+                if (element.contentEditable === "true") return;
+
                 if (e.target.classList.contains('resize-handle')) {
                     isResizing = true;
                     startX = e.clientX;
@@ -857,12 +876,10 @@
                         let myCenterX = newX + myWidth / 2;
                         let myCenterY = newY + myHeight / 2;
 
-                        // محاذاة أفقية (الوسط أو الأطراف)
                         if (Math.abs(newY - oTop) < snapThreshold) { newY = oTop; snappedY = true; showGuideH(oTop); }
                         else if (Math.abs(myCenterY - oCenterY) < snapThreshold) { newY = oCenterY - myHeight / 2; snappedY = true; showGuideH(oCenterY); }
                         else if (Math.abs((newY + myHeight) - (oTop + other.offsetHeight)) < snapThreshold) { newY = oTop + other.offsetHeight - myHeight; snappedY = true; showGuideH(oTop + other.offsetHeight); }
 
-                        // محاذاة عمودية (الوسط أو الأطراف)
                         if (Math.abs(newX - oLeft) < snapThreshold) { newX = oLeft; snappedX = true; showGuideV(oLeft); }
                         else if (Math.abs(myCenterX - oCenterX) < snapThreshold) { newX = oCenterX - myWidth / 2; snappedX = true; showGuideV(oCenterX); }
                         else if (Math.abs((newX + myWidth) - (oLeft + other.offsetWidth)) < snapThreshold) { newX = oLeft + other.offsetWidth - myWidth; snappedX = true; showGuideV(oLeft + other.offsetWidth); }
@@ -933,7 +950,7 @@
                 document.getElementById('custom-text').value = selectedElement.innerText.trim();
                 document.getElementById('font-size').value = parseInt(window.getComputedStyle(selectedElement).fontSize);
                 document.getElementById('line-height').value = window.getComputedStyle(selectedElement).lineHeight === 'normal' ? 1.2 : parseFloat(window.getComputedStyle(selectedElement).lineHeight) / parseInt(window.getComputedStyle(selectedElement).fontSize);
-                document.getElementById('border-color').value = rgbToHex(window.getComputedStyle(selectedElement).color);
+                document.getElementById('text-color').value = rgbToHex(window.getComputedStyle(selectedElement).color);
             } else if (selectedElement.dataset.type === 'image') {
                 let currentOpacity = window.getComputedStyle(selectedElement).opacity;
                 document.getElementById('image-opacity').value = currentOpacity;
@@ -963,6 +980,7 @@
                 selectedElement.style.fontFamily = document.getElementById('font-family').value;
                 selectedElement.style.lineHeight = document.getElementById('line-height').value;
                 selectedElement.style.textAlign = document.getElementById('text-align').value;
+                selectedElement.style.color = document.getElementById('text-color').value;
             }
         }
 
@@ -987,8 +1005,6 @@
                 } else if (selectedElement.dataset.type === 'line') {
                     selectedElement.style.height = borderWidth;
                     selectedElement.style.backgroundColor = borderColor;
-                } else if (selectedElement.dataset.type === 'text' || selectedElement.dataset.type === 'sticker') {
-                    selectedElement.style.color = borderColor;
                 } else if (selectedElement.dataset.type === 'arrow') {
                     let svg = selectedElement.querySelector('svg');
                     if (svg) {
@@ -1031,7 +1047,6 @@
             }
         });
 
-        // تحسين دعم الحذف والتحريك بالأسهم
         document.addEventListener('keydown', function(e) {
             const isInputActive = document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.contentEditable === "true";
             
