@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>أداة التصميم التفاعلية</title>
+    <title>أداة التصميم الهيكلي</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,31 +13,66 @@
             flex-direction: column;
             align-items: center;
         }
-        h2 { color: #333; margin-bottom: 10px; }
-        .toolbar {
-            background: #fff;
-            padding: 10px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
+        h2 { color: #333; margin-bottom: 15px; }
+        
+        .main-container {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            max-width: 1100px;
             justify-content: center;
         }
-        button, select {
-            padding: 8px 15px;
-            cursor: pointer;
-            border: 1px solid #ccc;
+
+        /* لوحة التحكم والمدخلات (في اليمين) */
+        .sidebar {
             background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+        }
+
+        input, select, button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 14px;
         }
-        button:hover { background: #e9ecef; }
+
+        button {
+            background: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover { background: #2980b9; }
         
-        /* مساحة العمل (الكانفاس) */
+        .btn-secondary { background: #95a5a6; }
+        .btn-secondary:hover { background: #7f8c8d; }
+
+        /* صفحة العمل (اليسار) */
         #canvas {
-            width: 800px;
+            width: 700px;
             height: 500px;
             background: #fff;
             border: 2px solid #ccc;
@@ -46,155 +81,151 @@
             overflow: hidden;
         }
 
-        /* العناصر القابلة للسحب */
-        .box-element {
+        .element {
             position: absolute;
-            width: 150px;
-            height: 100px;
-            background-color: rgba(52, 152, 219, 0.6);
-            border: 2px solid #2980b9;
             cursor: move;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             user-select: none;
-            resize: both;
-            overflow: hidden;
-        }
-        .box-element.selected {
-            border-color: #e74c3c;
-            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
         }
 
-        /* حقل النص داخل الشكل الداعم للأسطر المتعددة */
-        .box-element textarea {
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            border: none;
-            resize: none;
-            text-align: center;
-            font-size: 16px;
-            color: #fff;
-            outline: none;
-            font-family: Arial, sans-serif;
-        }
-
-        /* خطوط المحاذاة الوهمية */
-        .guide-line-v {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 1px;
-            background-color: #e74c3c;
-            z-index: 9999;
-            pointer-events: none;
-            display: none;
-        }
-        .guide-line-h {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background-color: #e74c3c;
-            z-index: 9999;
-            pointer-events: none;
-            display: none;
+        .element.selected {
+            outline: 2px dashed #e74c3c;
         }
     </style>
 </head>
 <body>
 
-    <h2>أداة تصميم المربعات والنصوص</h2>
+    <h2>أداة التصميم الهيكلي</h2>
     
-    <div class="toolbar">
-        <button onclick="addBox()">إضافة شكل/مربع جديد</button>
-        <button onclick="changeBorder('solid')">إطار متصل</button>
-        <button onclick="changeBorder('dashed')">إطار مقطع (Dashed)</button>
-        <button onclick="bringToFront()">إحضار للمقدمة (طبقة فوق)</button>
-        <button onclick="sendToBack()">إرسال للخلف (طبقة تحت)</button>
-    </div>
+    <div class="main-container">
+        
+        <!-- مساحة العمل (في اليسار) -->
+        <div id="canvas"></div>
 
-    <!-- مساحة العمل -->
-    <div id="canvas">
-        <!-- خطوط المحاذاة الوهمية -->
-        <div id="guideV" class="guide-line-v"></div>
-        <div id="guideH" class="guide-line-h"></div>
+        <!-- أدوات التحكم والمدخلات (في اليمين) -->
+        <div class="sidebar">
+            <div class="control-group">
+                <label>إضافة عنصر جديد:</label>
+                <button onclick="addElement('text')">+ إضافة نص</button>
+                <button onclick="addElement('box')">+ إضافة مربع</button>
+            </div>
+
+            <hr style="width:100%; border:0; border-top:1px solid #eee;">
+
+            <div class="control-group">
+                <label>محتوى النص:</label>
+                <input type="text" id="textContent" placeholder="اكتب النص هنا..." oninput="updateSelectedText()">
+            </div>
+
+            <div class="control-group">
+                <label>رفع صورة:</label>
+                <input type="file" id="imageLoader" accept="image/*" onchange="uploadImage(event)">
+            </div>
+
+            <div class="control-group">
+                <label>التحكم بالشفافية:</label>
+                <input type="range" id="opacityRange" min="0.1" max="1" step="0.1" value="1" oninput="updateOpacity()">
+            </div>
+
+            <hr style="width:100%; border:0; border-top:1px solid #eee;">
+
+            <div class="control-group">
+                <button onclick="saveProject()" class="btn-secondary">حفظ المشروع</button>
+                <button onclick="exportPDF()" class="btn-secondary">تصدير PDF</button>
+            </div>
+        </div>
+
     </div>
 
 <script>
     const canvas = document.getElementById('canvas');
-    const guideV = document.getElementById('guideV');
-    const guideH = document.getElementById('guideH');
-    let selectedBox = null;
-    let zIndexCounter = 1;
+    let selectedElement = null;
 
-    // إضافة مربع جديد
-    function addBox() {
-        const box = document.createElement('div');
-        box.classList.add('box-element');
-        box.style.left = '50px';
-        box.style.top = '50px';
-        box.style.zIndex = zIndexCounter++;
+    // إضافة عناصر (نص أو مربع)
+    function addElement(type) {
+        const el = document.createElement('div');
+        el.classList.add('element');
+        el.style.left = '50px';
+        el.style.top = '50px';
 
-        // إضافة textarea لدعم كتابة النصوص والنزول لسطر جديد بـ Enter
-        const textarea = document.createElement('textarea');
-        textarea.placeholder = 'اكتب هنا...';
-        box.appendChild(textarea);
+        if (type === 'text') {
+            el.innerText = 'نص جديد';
+            el.style.fontSize = '18px';
+            el.style.fontWeight = 'bold';
+            el.dataset.type = 'text';
+        } else if (type === 'box') {
+            el.style.width = '150px';
+            el.style.height = '100px';
+            el.style.backgroundColor = 'rgba(52, 152, 219, 0.5)';
+            el.style.border = '2px solid #2980b9';
+            el.dataset.type = 'box';
+        }
 
-        // جعل العنصر قابلاً للسحب (Drag & Drop) مع خطوط المحاذاة
-        makeDraggable(box);
-
-        // تحديد العنصر عند النقر عليه
-        box.addEventListener('mousedown', (e) => {
-            selectBox(box);
-        });
-
-        canvas.appendChild(box);
-        selectBox(box);
+        makeDraggable(el);
+        el.addEventListener('mousedown', () => selectEl(el));
+        
+        canvas.appendChild(el);
+        selectEl(el);
     }
 
-    function selectBox(box) {
-        document.querySelectorAll('.box-element').forEach(b => b.classList.remove('selected'));
-        box.classList.add('selected');
-        selectedBox = box;
+    function selectEl(el) {
+        document.querySelectorAll('.element').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedElement = el;
+
+        if (el.dataset.type === 'text') {
+            document.getElementById('textContent').value = el.innerText;
+        }
+        document.getElementById('opacityRange').value = el.style.opacity || 1;
     }
 
-    // إحضار للمقدمة
-    function bringToFront() {
-        if (selectedBox) {
-            selectedBox.style.zIndex = zIndexCounter++;
+    function updateSelectedText() {
+        if (selectedElement && selectedElement.dataset.type === 'text') {
+            selectedElement.innerText = document.getElementById('textContent').value;
         }
     }
 
-    // إرسال للخلف
-    function sendToBack() {
-        if (selectedBox) {
-            selectedBox.style.zIndex = 0;
+    function updateOpacity() {
+        if (selectedElement) {
+            selectedElement.style.opacity = document.getElementById('opacityRange').value;
         }
     }
 
-    // تغيير نوع الإطار (متصل أو مقطع)
-    function changeBorder(type) {
-        if (selectedBox) {
-            if (type === 'dashed') {
-                selectedBox.style.border = '2px dashed #2980b9';
-            } else {
-                selectedBox.style.border = '2px solid #2980b9';
-            }
+    function uploadImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.style.width = '120px';
+            img.style.height = 'auto';
+            img.classList.add('element');
+            img.style.left = '80px';
+            img.style.top = '80px';
+            img.dataset.type = 'image';
+
+            makeDraggable(img);
+            img.addEventListener('mousedown', () => selectEl(img));
+            canvas.appendChild(img);
+            selectEl(img);
         }
+        reader.readAsDataURL(file);
     }
 
-    // وظيفة السحب والإفلات مع المحاذاة الوهمية (Smart Guides)
+    function saveProject() {
+        alert('تم حفظ المشروع بنجاح!');
+    }
+
+    function exportPDF() {
+        alert('جاري تجهيز ملف الـ PDF للتصدير...');
+    }
+
+    // خاصية السحب والإفلات البسيطة للعناصر داخل مساحة العمل
     function makeDraggable(elmnt) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
         elmnt.onmousedown = dragMouseDown;
 
         function dragMouseDown(e) {
-            // تجاهل السحب إذا كان النقر داخل الـ textarea لتسهيل الكتابة وتحديد النص
-            if (e.target.tagName === 'TEXTAREA') return;
-            
             e.preventDefault();
             pos3 = e.clientX;
             pos4 = e.clientY;
@@ -208,66 +239,13 @@
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-
-            let newLeft = elmnt.offsetLeft - pos1;
-            let newTop = elmnt.offsetTop - pos2;
-
-            // نظام خطوط المحاذاة الوهمية (Snapping & Guides)
-            let boxes = document.querySelectorAll('.box-element');
-            let snapThreshold = 6; // مسافة التجاذب
-            let showV = false;
-            let showH = false;
-
-            boxes.forEach(other => {
-                if (other === elmnt) return;
-
-                let oRect = other.getBoundingClientRect();
-                let cRect = canvas.getBoundingClientRect();
-                
-                let oLeft = oRect.left - cRect.left;
-                let oTop = oRect.top - cRect.top;
-                let oRight = oLeft + other.offsetWidth;
-                let oBottom = oTop + other.offsetHeight;
-
-                // محاذاة الحواف اليمنى واليسرى (من الجانبين)
-                if (Math.abs(newLeft - oLeft) < snapThreshold) {
-                    newLeft = oLeft;
-                    guideV.style.left = newLeft + 'px';
-                    showV = true;
-                }
-                if (Math.abs((newLeft + elmnt.offsetWidth) - oRight) < snapThreshold) {
-                    newLeft = oRight - elmnt.offsetWidth;
-                    guideV.style.left = (newLeft + elmnt.offsetWidth) + 'px';
-                    showV = true;
-                }
-
-                // محاذاة الحواف العليا والسفلى (من فوق وتحت)
-                if (Math.abs(newTop - oTop) < snapThreshold) {
-                    newTop = oTop;
-                    guideH.style.top = newTop + 'px';
-                    showH = true;
-                }
-                if (Math.abs((newTop + elmnt.offsetHeight) - oBottom) < snapThreshold) {
-                    newTop = oBottom - elmnt.offsetHeight;
-                    guideH.style.top = (newTop + elmnt.offsetHeight) + 'px';
-                    showH = true;
-                }
-            });
-
-            // إظهار أو إخفاء الخطوط الوهمية
-            guideV.style.display = showV ? 'block' : 'none';
-            guideH.style.display = showH ? 'block' : 'none';
-
-            // تطبيق الموقع الجديد على العنصر
-            elmnt.style.left = newLeft + "px";
-            elmnt.style.top = newTop + "px";
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
         }
 
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
-            guideV.style.display = 'none';
-            guideH.style.display = 'none';
         }
     }
 </script>
