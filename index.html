@@ -2,253 +2,457 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>أداة التصميم الهيكلي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصمم لوحات ومستندات A4</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h2 { color: #333; margin-bottom: 15px; }
-        
-        .main-container {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            max-width: 1100px;
-            justify-content: center;
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f3f4f6;
+            --panel-bg: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
         }
 
-        /* لوحة التحكم والمدخلات (في اليمين) */
-        .sidebar {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            width: 320px;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            max-height: 80vh;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button.secondary {
+            background-color: #4b5563;
+        }
+        button.secondary:hover {
+            background-color: #374151;
+        }
+
+        button.danger {
+            background-color: #dc2626;
+        }
+        button.danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Controls */
+        sidebar {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
             overflow-y: auto;
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
 
         .control-group label {
-            font-weight: bold;
-            font-size: 13px;
-            color: #555;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
         }
 
-        input, select, button {
+        .control-group input, .control-group select, .control-group textarea {
             padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
         }
 
-        button {
-            background: #3498db;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
+        .control-group input:focus, .control-group select:focus {
+            border-color: var(--primary-color);
         }
 
-        button:hover { background: #2980b9; }
-        
-        .btn-secondary { background: #95a5a6; }
-        .btn-secondary:hover { background: #7f8c8d; }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
 
-        /* صفحة العمل (اليسار) */
-        #canvas {
-            width: 700px;
-            height: 500px;
-            background: #fff;
-            border: 2px solid #ccc;
+        /* Workspace Canvas Area */
+        .workspace {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            padding: 40px;
             position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
         }
 
-        .element {
+        /* A4 Page Representation */
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            transform-origin: center center;
+        }
+
+        /* Draggable Elements */
+        .canvas-element {
             position: absolute;
             cursor: move;
             user-select: none;
+            border: 1px dashed transparent;
+            padding: 4px;
         }
 
-        .element.selected {
-            outline: 2px dashed #e74c3c;
+        .canvas-element:hover, .canvas-element.selected {
+            border-color: var(--primary-color);
+        }
+
+        .canvas-element.text-element {
+            font-size: 16px;
+            white-space: pre-wrap;
+        }
+
+        .canvas-element.box-element {
+            background-color: #e0e7ff;
+            border: 1px solid var(--primary-color);
+        }
+
+        /* Resize handles */
+        .resize-handle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            display: none;
+        }
+
+        .canvas-element.selected .resize-handle {
+            display: block;
+        }
+
+        .handle-se { bottom: -4px; left: -4px; cursor: nwse-resize; }
+
+        /* Print Settings */
+        @media print {
+            body {
+                background: white;
+            }
+            header, sidebar {
+                display: none;
+            }
+            .workspace {
+                padding: 0;
+            }
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+            }
+            .canvas-element {
+                border: none !important;
+            }
+            .resize-handle {
+                display: none !important;
+            }
         }
     </style>
 </head>
 <body>
 
-    <h2>أداة التصميم الهيكلي</h2>
-    
+    <header>
+        <h1>مصمم لوحات ومستندات A4</h1>
+        <div class="toolbar-actions">
+            <button class="secondary" onclick="saveLocal()">حفظ محلي</button>
+            <button class="secondary" onclick="loadLocal()">استرجاع</button>
+            <button onclick="window.print()">طباعة / تصدير PDF</button>
+        </div>
+    </header>
+
     <div class="main-container">
-        
-        <!-- مساحة العمل (في اليسار) -->
-        <div id="canvas"></div>
-
-        <!-- أدوات التحكم والمدخلات (في اليمين) -->
-        <div class="sidebar">
+        <!-- Sidebar Controls -->
+        <sidebar>
             <div class="control-group">
-                <label>إضافة عنصر جديد:</label>
-                <button onclick="addElement('text')">+ إضافة نص</button>
-                <button onclick="addElement('box')">+ إضافة مربع</button>
+                <label>إضافة عناصر جديدة</label>
+                <div class="tools-grid">
+                    <button onclick="addTextElement()">نص جديد</button>
+                    <button onclick="addBoxElement()">صندوق ملون</button>
+                </div>
             </div>
 
-            <hr style="width:100%; border:0; border-top:1px solid #eee;">
+            <hr style="border:0; border-top:1px solid var(--border-color);">
 
-            <div class="control-group">
-                <label>محتوى النص:</label>
-                <input type="text" id="textContent" placeholder="اكتب النص هنا..." oninput="updateSelectedText()">
+            <div id="properties-panel" class="control-group" style="display:none;">
+                <label>خصائص العنصر المحدد</label>
+                
+                <div class="control-group" id="text-content-group">
+                    <label>النص</label>
+                    <textarea id="prop-text" rows="3" oninput="updateSelectedText(this.value)"></textarea>
+                </div>
+
+                <div class="control-group">
+                    <label>حجم الخط (بيكسل)</label>
+                    <input type="number" id="prop-font-size" oninput="updateSelectedFontSize(this.value)">
+                </div>
+
+                <div class="control-group">
+                    <label>لون النص / الخلفية</label>
+                    <input type="color" id="prop-color" oninput="updateSelectedColor(this.value)">
+                </div>
+
+                <div class="control-group" style="margin-top: 10px;">
+                    <button class="danger" onclick="deleteSelectedElement()">حذف العنصر</button>
+                </div>
             </div>
 
-            <div class="control-group">
-                <label>رفع صورة:</label>
-                <input type="file" id="imageLoader" accept="image/*" onchange="uploadImage(event)">
+            <div id="no-selection" style="color: #6b7280; font-size: 0.9rem; text-align: center; margin-top: 20px;">
+                اضغط على أي عنصر في الصفحة لتعديل خصائصه.
             </div>
+        </sidebar>
 
-            <div class="control-group">
-                <label>التحكم بالشفافية:</label>
-                <input type="range" id="opacityRange" min="0.1" max="1" step="0.1" value="1" oninput="updateOpacity()">
-            </div>
-
-            <hr style="width:100%; border:0; border-top:1px solid #eee;">
-
-            <div class="control-group">
-                <button onclick="saveProject()" class="btn-secondary">حفظ المشروع</button>
-                <button onclick="exportPDF()" class="btn-secondary">تصدير PDF</button>
+        <!-- Workspace -->
+        <div class="workspace" id="workspace">
+            <div class="a4-page" id="a4-page" onclick="deselectAll(event)">
+                <!-- Elements will be injected here -->
             </div>
         </div>
-
     </div>
 
-<script>
-    const canvas = document.getElementById('canvas');
-    let selectedElement = null;
+    <script>
+        let elements = [];
+        let selectedId = null;
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
 
-    // إضافة عناصر (نص أو مربع)
-    function addElement(type) {
-        const el = document.createElement('div');
-        el.classList.add('element');
-        el.style.left = '50px';
-        el.style.top = '50px';
-
-        if (type === 'text') {
-            el.innerText = 'نص جديد';
-            el.style.fontSize = '18px';
-            el.style.fontWeight = 'bold';
-            el.dataset.type = 'text';
-        } else if (type === 'box') {
-            el.style.width = '150px';
-            el.style.height = '100px';
-            el.style.backgroundColor = 'rgba(52, 152, 219, 0.5)';
-            el.style.border = '2px solid #2980b9';
-            el.dataset.type = 'box';
+        function addTextElement() {
+            const newItem = {
+                id: 'el_' + Date.now(),
+                type: 'text',
+                text: 'اكتب النص هنا...',
+                x: 50,
+                y: 50,
+                fontSize: 18,
+                color: '#1f2937'
+            };
+            elements.push(newItem);
+            renderCanvas();
+            selectElement(newItem.id);
         }
 
-        makeDraggable(el);
-        el.addEventListener('mousedown', () => selectEl(el));
-        
-        canvas.appendChild(el);
-        selectEl(el);
-    }
-
-    function selectEl(el) {
-        document.querySelectorAll('.element').forEach(e => e.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedElement = el;
-
-        if (el.dataset.type === 'text') {
-            document.getElementById('textContent').value = el.innerText;
-        }
-        document.getElementById('opacityRange').value = el.style.opacity || 1;
-    }
-
-    function updateSelectedText() {
-        if (selectedElement && selectedElement.dataset.type === 'text') {
-            selectedElement.innerText = document.getElementById('textContent').value;
-        }
-    }
-
-    function updateOpacity() {
-        if (selectedElement) {
-            selectedElement.style.opacity = document.getElementById('opacityRange').value;
-        }
-    }
-
-    function uploadImage(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = document.createElement('img');
-            img.src = event.target.result;
-            img.style.width = '120px';
-            img.style.height = 'auto';
-            img.classList.add('element');
-            img.style.left = '80px';
-            img.style.top = '80px';
-            img.dataset.type = 'image';
-
-            makeDraggable(img);
-            img.addEventListener('mousedown', () => selectEl(img));
-            canvas.appendChild(img);
-            selectEl(img);
-        }
-        reader.readAsDataURL(file);
-    }
-
-    function saveProject() {
-        alert('تم حفظ المشروع بنجاح!');
-    }
-
-    function exportPDF() {
-        alert('جاري تجهيز ملف الـ PDF للتصدير...');
-    }
-
-    // خاصية السحب والإفلات البسيطة للعناصر داخل مساحة العمل
-    function makeDraggable(elmnt) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-        elmnt.onmousedown = dragMouseDown;
-
-        function dragMouseDown(e) {
-            e.preventDefault();
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
+        function addBoxElement() {
+            const newItem = {
+                id: 'el_' + Date.now(),
+                type: 'box',
+                width: 150,
+                height: 100,
+                x: 100,
+                y: 100,
+                color: '#e0e7ff'
+            };
+            elements.push(newItem);
+            renderCanvas();
+            selectElement(newItem.id);
         }
 
-        function elementDrag(e) {
-            e.preventDefault();
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        function renderCanvas() {
+            const page = document.getElementById('a4-page');
+            page.innerHTML = '';
+
+            elements.forEach(el => {
+                const div = document.createElement('div');
+                div.className = `canvas-element ${el.type === 'text' ? 'text-element' : 'box-element'}`;
+                if (el.id === selectedId) div.classList.add('selected');
+                
+                div.style.left = el.x + 'px';
+                div.style.top = el.y + 'px';
+
+                if (el.type === 'text') {
+                    div.innerText = el.text;
+                    div.style.fontSize = el.fontSize + 'px';
+                    div.style.color = el.color;
+                } else {
+                    div.style.width = el.width + 'px';
+                    div.style.height = el.height + 'px';
+                    div.style.backgroundColor = el.color;
+                }
+
+                // Dragging event bindings
+                div.onmousedown = (e) => {
+                    e.stopPropagation();
+                    selectElement(el.id);
+                    startDragging(e, el);
+                };
+
+                // Resize handle
+                const handle = document.createElement('div');
+                handle.className = 'resize-handle handle-se';
+                div.appendChild(handle);
+
+                page.appendChild(div);
+            });
         }
 
-        function closeDragElement() {
-            document.onmouseup = null;
-            document.onmousemove = null;
-        }
-    }
-</script>
+        function selectElement(id) {
+            selectedId = id;
+            const el = elements.find(item => item.id === id);
+            
+            document.getElementById('no-selection').style.display = el ? 'none' : 'block';
+            document.getElementById('properties-panel').style.display = el ? 'flex' : 'none';
 
+            if (el) {
+                if (el.type === 'text') {
+                    document.getElementById('text-content-group').style.display = 'flex';
+                    document.getElementById('prop-text').value = el.text;
+                    document.getElementById('prop-font-size').value = el.fontSize;
+                    document.getElementById('prop-color').value = el.color;
+                } else {
+                    document.getElementById('text-content-group').style.display = 'none';
+                    document.getElementById('prop-color').value = el.color;
+                }
+            }
+            renderCanvas();
+        }
+
+        function deselectAll(e) {
+            if (e.target.id === 'a4-page') {
+                selectedId = null;
+                document.getElementById('no-selection').style.display = 'block';
+                document.getElementById('properties-panel').style.display = 'none';
+                renderCanvas();
+            }
+        }
+
+        function startDragging(e, el) {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            initialX = el.x;
+            initialY = el.y;
+
+            const onMouseMove = (moveEvent) => {
+                if (!isDragging) return;
+                const dx = moveEvent.clientX - startX;
+                const dy = moveEvent.clientY - startY;
+                el.x = Math.max(0, initialX + dx);
+                el.y = Math.max(0, initialY + dy);
+                renderCanvas();
+            };
+
+            const onMouseUp = () => {
+                isDragging = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            };
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
+        function updateSelectedText(val) {
+            const el = elements.find(item => item.id === selectedId);
+            if (el && el.type === 'text') {
+                el.text = val;
+                renderCanvas();
+            }
+        }
+
+        function updateSelectedFontSize(val) {
+            const el = elements.find(item => item.id === selectedId);
+            if (el && el.type === 'text') {
+                el.fontSize = parseInt(val) || 12;
+                renderCanvas();
+            }
+        }
+
+        function updateSelectedColor(val) {
+            const el = elements.find(item => item.id === selectedId);
+            if (el) {
+                el.color = val;
+                renderCanvas();
+            }
+        }
+
+        function deleteSelectedElement() {
+            elements = elements.filter(item => item.id !== selectedId);
+            selectedId = null;
+            document.getElementById('no-selection').style.display = 'block';
+            document.getElementById('properties-panel').style.display = 'none';
+            renderCanvas();
+        }
+
+        function saveLocal() {
+            localStorage.setItem('a4_designer_data', JSON.stringify(elements));
+            alert('تم حفظ التصميم بنجاح!');
+        }
+
+        function loadLocal() {
+            const data = localStorage.getItem('a4_designer_data');
+            if (data) {
+                elements = JSON.parse(data);
+                selectedId = null;
+                renderCanvas();
+                alert('تم استرجاع التصميم بنجاح!');
+            } else {
+                alert('لا توجد بيانات محفوظة مسبقاً.');
+            }
+        }
+
+        // Initialize with a sample text
+        addTextElement();
+    </script>
 </body>
 </html>
