@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مصمم لوحات ومستندات A4</title>
+    <title>مصمم لوحات ومستندات A4 المتقدم</title>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -33,7 +33,7 @@
         header {
             background-color: var(--panel-bg);
             border-bottom: 1px solid var(--border-color);
-            padding: 12px 24px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -42,23 +42,24 @@
         }
 
         header h1 {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             color: var(--primary-color);
         }
 
         .toolbar-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            align-items: center;
         }
 
         button {
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             transition: background-color 0.2s;
         }
 
@@ -88,33 +89,33 @@
 
         /* Sidebar Controls */
         sidebar {
-            width: 320px;
+            width: 300px;
             background-color: var(--panel-bg);
             border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            gap: 20px;
+            padding: 15px;
+            gap: 15px;
             overflow-y: auto;
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .control-group label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: #4b5563;
         }
 
         .control-group input, .control-group select, .control-group textarea {
-            padding: 8px 12px;
+            padding: 6px 10px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             outline: none;
         }
 
@@ -125,7 +126,7 @@
         .tools-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
 
         /* Workspace Canvas Area */
@@ -140,6 +141,10 @@
         }
 
         /* A4 Page Representation */
+        .a4-page-wrapper {
+            transition: transform 0.2s ease;
+        }
+
         .a4-page {
             width: 210mm;
             height: 297mm;
@@ -147,7 +152,11 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             position: relative;
             overflow: hidden;
-            transform-origin: center center;
+        }
+
+        .a4-page.landscape {
+            width: 297mm;
+            height: 210mm;
         }
 
         /* Draggable Elements */
@@ -156,7 +165,9 @@
             cursor: move;
             user-select: none;
             border: 1px dashed transparent;
-            padding: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .canvas-element:hover, .canvas-element.selected {
@@ -166,6 +177,9 @@
         .canvas-element.text-element {
             font-size: 16px;
             white-space: pre-wrap;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 4px;
         }
 
         .canvas-element.box-element {
@@ -173,20 +187,16 @@
             border: 1px solid var(--primary-color);
         }
 
-        /* Resize handles */
-        .resize-handle {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: var(--primary-color);
-            display: none;
+        .canvas-element.circle-element {
+            background-color: #fed7aa;
+            border: 1px solid #f97316;
+            border-radius: 50%;
         }
 
-        .canvas-element.selected .resize-handle {
-            display: block;
+        .canvas-element.arrow-element, .canvas-element.hollow-arrow-element {
+            font-size: 24px;
+            background: transparent;
         }
-
-        .handle-se { bottom: -4px; left: -4px; cursor: nwse-resize; }
 
         /* Print Settings */
         @media print {
@@ -199,15 +209,15 @@
             .workspace {
                 padding: 0;
             }
+            .a4-page-wrapper {
+                transform: none !important;
+            }
             .a4-page {
                 box-shadow: none;
                 margin: 0;
             }
             .canvas-element {
                 border: none !important;
-            }
-            .resize-handle {
-                display: none !important;
             }
         }
     </style>
@@ -217,9 +227,20 @@
     <header>
         <h1>مصمم لوحات ومستندات A4</h1>
         <div class="toolbar-actions">
-            <button class="secondary" onclick="saveLocal()">حفظ محلي</button>
-            <button class="secondary" onclick="loadLocal()">استرجاع</button>
-            <button onclick="window.print()">طباعة / تصدير PDF</button>
+            <button class="secondary" onclick="toggleOrientation()">الوضع: <span id="orientation-label">عمودي</span></button>
+            <label style="font-size:0.8rem; font-weight:600; margin-right:5px;">زووم:</label>
+            <select id="zoom-select" onchange="changeZoom(this.value)" style="padding:4px; font-size:0.8rem;">
+                <option value="0.5">50%</option>
+                <option value="0.75">75%</option>
+                <option value="1" selected>100%</option>
+                <option value="1.25">125%</option>
+                <option value="1.5">150%</option>
+            </select>
+            <button class="secondary" onclick="saveLocal()">حفظ بالمتصفح</button>
+            <button class="secondary" onclick="exportJSON()">تصدير ملف</button>
+            <button class="secondary" onclick="document.getElementById('import-file').click()">استيراد ملف</button>
+            <input type="file" id="import-file" style="display:none" onchange="importJSON(event)">
+            <button onclick="window.print()">طباعة / PDF</button>
         </div>
     </header>
 
@@ -227,10 +248,13 @@
         <!-- Sidebar Controls -->
         <sidebar>
             <div class="control-group">
-                <label>إضافة عناصر جديدة</label>
+                <label>إضافة عناصر وأشكال</label>
                 <div class="tools-grid">
-                    <button onclick="addTextElement()">نص جديد</button>
-                    <button onclick="addBoxElement()">صندوق ملون</button>
+                    <button onclick="addElement('text')">نص جديد</button>
+                    <button onclick="addElement('box')">مربع/مستطيل</button>
+                    <button onclick="addElement('circle')">دائرة</button>
+                    <button onclick="addElement('arrow')">سهم ➡️</button>
+                    <button onclick="addElement('hollow-arrow')">سهم مفرغ ➦</button>
                 </div>
             </div>
 
@@ -239,19 +263,37 @@
             <div id="properties-panel" class="control-group" style="display:none;">
                 <label>خصائص العنصر المحدد</label>
                 
-                <div class="control-group" id="text-content-group">
+                <div class="control-group" id="group-text">
                     <label>النص</label>
-                    <textarea id="prop-text" rows="3" oninput="updateSelectedText(this.value)"></textarea>
+                    <textarea id="prop-text" rows="2" oninput="updateProp('text', this.value)"></textarea>
+                </div>
+
+                <div class="control-group" id="group-font-size">
+                    <label>حجم الخط</label>
+                    <input type="number" id="prop-font-size" oninput="updateProp('fontSize', parseInt(this.value))">
+                </div>
+
+                <div class="control-group" id="group-width-height">
+                    <div style="display:flex; gap:5px;">
+                        <div style="flex:1;">
+                            <label>العرض</label>
+                            <input type="number" id="prop-width" oninput="updateProp('width', parseInt(this.value))">
+                        </div>
+                        <div style="flex:1;">
+                            <label>الارتفاع</label>
+                            <input type="number" id="prop-height" oninput="updateProp('height', parseInt(this.value))">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group" id="group-radius">
+                    <label>حدة الزاوية (Border Radius)</label>
+                    <input type="range" id="prop-radius" min="0" max="50" oninput="updateProp('borderRadius', this.value + 'px')">
                 </div>
 
                 <div class="control-group">
-                    <label>حجم الخط (بيكسل)</label>
-                    <input type="number" id="prop-font-size" oninput="updateSelectedFontSize(this.value)">
-                </div>
-
-                <div class="control-group">
-                    <label>لون النص / الخلفية</label>
-                    <input type="color" id="prop-color" oninput="updateSelectedColor(this.value)">
+                    <label>اللون (خلفية / نص)</label>
+                    <input type="color" id="prop-color" oninput="updateProp('color', this.value)">
                 </div>
 
                 <div class="control-group" style="margin-top: 10px;">
@@ -259,51 +301,61 @@
                 </div>
             </div>
 
-            <div id="no-selection" style="color: #6b7280; font-size: 0.9rem; text-align: center; margin-top: 20px;">
-                اضغط على أي عنصر في الصفحة لتعديل خصائصه.
+            <div id="no-selection" style="color: #6b7280; font-size: 0.85rem; text-align: center; margin-top: 20px;">
+                اضغط على أي عنصر في الصفحة لتعديل خصائصه المتقدمة.
             </div>
         </sidebar>
 
         <!-- Workspace -->
         <div class="workspace" id="workspace">
-            <div class="a4-page" id="a4-page" onclick="deselectAll(event)">
-                <!-- Elements will be injected here -->
+            <div class="a4-page-wrapper" id="page-wrapper">
+                <div class="a4-page" id="a4-page" onclick="deselectAll(event)">
+                    <!-- Elements injected via JS -->
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let elements = [];
-        let selectedId = null;
-        let isDragging = false;
-        let startX, startY, initialX, initialY;
+        let state = {
+            orientation: 'portrait', // portrait or landscape
+            zoom: 1,
+            elements: [],
+            selectedId: null
+        };
 
-        function addTextElement() {
-            const newItem = {
-                id: 'el_' + Date.now(),
-                type: 'text',
-                text: 'اكتب النص هنا...',
-                x: 50,
-                y: 50,
-                fontSize: 18,
-                color: '#1f2937'
-            };
-            elements.push(newItem);
-            renderCanvas();
-            selectElement(newItem.id);
+        let isDragging = false, startX, startY, initialX, initialY;
+
+        function toggleOrientation() {
+            state.orientation = state.orientation === 'portrait' ? 'landscape' : 'portrait';
+            document.getElementById('orientation-label').innerText = state.orientation === 'portrait' ? 'عمودي' : 'أفقي';
+            const page = document.getElementById('a4-page');
+            if (state.orientation === 'landscape') {
+                page.classList.add('landscape');
+            } else {
+                page.classList.remove('landscape');
+            }
         }
 
-        function addBoxElement() {
-            const newItem = {
+        function changeZoom(val) {
+            state.zoom = parseFloat(val);
+            document.getElementById('page-wrapper').style.transform = `scale(${state.zoom})`;
+        }
+
+        function addElement(type) {
+            let newItem = {
                 id: 'el_' + Date.now(),
-                type: 'box',
-                width: 150,
-                height: 100,
+                type: type,
                 x: 100,
                 y: 100,
-                color: '#e0e7ff'
+                width: 120,
+                height: 80,
+                color: type === 'text' ? '#1f2937' : (type === 'circle' ? '#fed7aa' : '#e0e7ff'),
+                fontSize: 16,
+                text: type === 'text' ? 'اكتب النص هنا...' : (type === 'arrow' ? '➔' : (type === 'hollow-arrow' ? '➦' : '')),
+                borderRadius: '0px'
             };
-            elements.push(newItem);
+            state.elements.push(newItem);
             renderCanvas();
             selectElement(newItem.id);
         }
@@ -312,64 +364,72 @@
             const page = document.getElementById('a4-page');
             page.innerHTML = '';
 
-            elements.forEach(el => {
+            state.elements.forEach(el => {
                 const div = document.createElement('div');
-                div.className = `canvas-element ${el.type === 'text' ? 'text-element' : 'box-element'}`;
-                if (el.id === selectedId) div.classList.add('selected');
+                div.className = `canvas-element ${el.type}-element`;
+                if (el.id === state.selectedId) div.classList.add('selected');
                 
                 div.style.left = el.x + 'px';
                 div.style.top = el.y + 'px';
+                div.style.width = el.width + 'px';
+                div.style.height = el.height + 'px';
 
                 if (el.type === 'text') {
                     div.innerText = el.text;
                     div.style.fontSize = el.fontSize + 'px';
                     div.style.color = el.color;
-                } else {
-                    div.style.width = el.width + 'px';
-                    div.style.height = el.height + 'px';
+                    div.style.backgroundColor = 'transparent';
+                } else if (el.type === 'box') {
                     div.style.backgroundColor = el.color;
+                    div.style.borderRadius = el.borderRadius;
+                } else if (el.type === 'circle') {
+                    div.style.backgroundColor = el.color;
+                } else if (el.type === 'arrow' || el.type === 'hollow-arrow') {
+                    div.innerText = el.text;
+                    div.style.fontSize = (el.height || 30) + 'px';
+                    div.style.color = el.color;
+                    div.style.background = 'transparent';
                 }
 
-                // Dragging event bindings
                 div.onmousedown = (e) => {
                     e.stopPropagation();
                     selectElement(el.id);
                     startDragging(e, el);
                 };
 
-                // Resize handle
-                const handle = document.createElement('div');
-                handle.className = 'resize-handle handle-se';
-                div.appendChild(handle);
-
                 page.appendChild(div);
             });
         }
 
         function selectElement(id) {
-            selectedId = id;
-            const el = elements.find(item => item.id === id);
+            state.selectedId = id;
+            const el = state.elements.find(item => item.id === id);
             
             document.getElementById('no-selection').style.display = el ? 'none' : 'block';
             document.getElementById('properties-panel').style.display = el ? 'flex' : 'none';
 
             if (el) {
-                if (el.type === 'text') {
-                    document.getElementById('text-content-group').style.display = 'flex';
+                document.getElementById('group-text').style.display = (el.type === 'text' || el.type === 'arrow' || el.type === 'hollow-arrow') ? 'flex' : 'none';
+                document.getElementById('group-font-size').style.display = (el.type === 'text') ? 'flex' : 'none';
+                document.getElementById('group-radius').style.display = (el.type === 'box') ? 'flex' : 'none';
+
+                if (el.type === 'text' || el.type === 'arrow' || el.type === 'hollow-arrow') {
                     document.getElementById('prop-text').value = el.text;
                     document.getElementById('prop-font-size').value = el.fontSize;
-                    document.getElementById('prop-color').value = el.color;
-                } else {
-                    document.getElementById('text-content-group').style.display = 'none';
-                    document.getElementById('prop-color').value = el.color;
                 }
+                if (el.type === 'box') {
+                    document.getElementById('prop-radius').value = parseInt(el.borderRadius) || 0;
+                }
+                document.getElementById('prop-width').value = el.width;
+                document.getElementById('prop-height').value = el.height;
+                document.getElementById('prop-color').value = el.color.startsWith('#') ? el.color : '#2563eb';
             }
             renderCanvas();
         }
 
         function deselectAll(e) {
             if (e.target.id === 'a4-page') {
-                selectedId = null;
+                state.selectedId = null;
                 document.getElementById('no-selection').style.display = 'block';
                 document.getElementById('properties-panel').style.display = 'none';
                 renderCanvas();
@@ -385,8 +445,8 @@
 
             const onMouseMove = (moveEvent) => {
                 if (!isDragging) return;
-                const dx = moveEvent.clientX - startX;
-                const dy = moveEvent.clientY - startY;
+                const dx = (moveEvent.clientX - startX) / state.zoom;
+                const dy = (moveEvent.clientY - startY) / state.zoom;
                 el.x = Math.max(0, initialX + dx);
                 el.y = Math.max(0, initialY + dy);
                 renderCanvas();
@@ -402,57 +462,83 @@
             window.addEventListener('mouseup', onMouseUp);
         }
 
-        function updateSelectedText(val) {
-            const el = elements.find(item => item.id === selectedId);
-            if (el && el.type === 'text') {
-                el.text = val;
-                renderCanvas();
-            }
-        }
-
-        function updateSelectedFontSize(val) {
-            const el = elements.find(item => item.id === selectedId);
-            if (el && el.type === 'text') {
-                el.fontSize = parseInt(val) || 12;
-                renderCanvas();
-            }
-        }
-
-        function updateSelectedColor(val) {
-            const el = elements.find(item => item.id === selectedId);
+        function updateProp(prop, val) {
+            const el = state.elements.find(item => item.id === state.selectedId);
             if (el) {
-                el.color = val;
+                el[prop] = val;
                 renderCanvas();
             }
         }
 
         function deleteSelectedElement() {
-            elements = elements.filter(item => item.id !== selectedId);
-            selectedId = null;
+            state.elements = state.elements.filter(item => item.id !== state.selectedId);
+            state.selectedId = null;
             document.getElementById('no-selection').style.display = 'block';
             document.getElementById('properties-panel').style.display = 'none';
             renderCanvas();
         }
 
         function saveLocal() {
-            localStorage.setItem('a4_designer_data', JSON.stringify(elements));
-            alert('تم حفظ التصميم بنجاح!');
+            localStorage.setItem('a4_advanced_designer', JSON.stringify(state));
+            alert('تم حفظ التصميم في ذاكرة المتصفح بنجاح!');
         }
 
         function loadLocal() {
-            const data = localStorage.getItem('a4_designer_data');
+            const data = localStorage.getItem('a4_advanced_designer');
             if (data) {
-                elements = JSON.parse(data);
-                selectedId = null;
+                state = JSON.parse(data);
+                document.getElementById('orientation-label').innerText = state.orientation === 'portrait' ? 'عمودي' : 'أفقي';
+                const page = document.getElementById('a4-page');
+                if (state.orientation === 'landscape') page.classList.add('landscape');
+                else page.classList.remove('landscape');
+                changeZoom(state.zoom);
+                document.getElementById('zoom-select').value = state.zoom;
+                state.selectedId = null;
                 renderCanvas();
-                alert('تم استرجاع التصميم بنجاح!');
-            } else {
-                alert('لا توجد بيانات محفوظة مسبقاً.');
             }
         }
 
-        // Initialize with a sample text
-        addTextElement();
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "a4_design_project.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importJSON(event) {
+            const fileReader = new FileReader();
+            if (event.target.files[0]) {
+                fileReader.readAsText(event.target.files[0], "UTF-8");
+                fileReader.onload = (e) => {
+                    try {
+                        state = JSON.parse(e.target.result);
+                        document.getElementById('orientation-label').innerText = state.orientation === 'portrait' ? 'عمودي' : 'أفقي';
+                        const page = document.getElementById('a4-page');
+                        if (state.orientation === 'landscape') page.classList.add('landscape');
+                        else page.classList.remove('landscape');
+                        changeZoom(state.zoom);
+                        document.getElementById('zoom-select').value = state.zoom;
+                        state.selectedId = null;
+                        renderCanvas();
+                        alert('تم استيراد المشروع بنجاح!');
+                    } catch (err) {
+                        alert('ملف غير صالح!');
+                    }
+                }
+            }
+        }
+
+        // استرجاع الحفظ التلقائي إن وجد عند التحميل
+        window.onload = () => {
+            if (localStorage.getItem('a4_advanced_designer')) {
+                loadLocal();
+            } else {
+                addElement('text');
+            }
+        };
     </script>
 </body>
 </html>
