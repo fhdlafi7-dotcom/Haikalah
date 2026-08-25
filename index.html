@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>أداة التصميم التفاعلية</title>
+    <title>أداة التصميم - نصوص وأشكال مستقلة</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,7 +25,7 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        button, select {
+        button {
             padding: 8px 15px;
             cursor: pointer;
             border: 1px solid #ccc;
@@ -35,7 +35,7 @@
         }
         button:hover { background: #e9ecef; }
         
-        /* مساحة العمل (الكانفاس) */
+        /* مساحة العمل */
         #canvas {
             width: 800px;
             height: 500px;
@@ -46,60 +46,64 @@
             overflow: hidden;
         }
 
-        /* العناصر القابلة للسحب */
-        .box-element {
+        /* تنسيق عام للعناصر القابلة للسحب */
+        .canvas-element {
             position: absolute;
+            cursor: move;
+            user-select: none;
+        }
+        
+        /* التحديد (عند النقر على العنصر) */
+        .canvas-element.selected {
+            outline: 2px dashed #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
+        }
+
+        /* تصميم المربع */
+        .box-element {
             width: 150px;
             height: 100px;
-            background-color: rgba(52, 152, 219, 0.6);
+            background-color: rgba(52, 152, 219, 0.6); /* لون شبه شفاف */
             border: 2px solid #2980b9;
-            cursor: move;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
             resize: both;
             overflow: hidden;
         }
-        .box-element.selected {
-            border-color: #e74c3c;
-            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+
+        /* تصميم النص */
+        .text-element {
+            width: 200px;
+            height: 80px;
+            background: transparent;
+            resize: both;
+            overflow: hidden;
         }
 
-        /* حقل النص داخل الشكل الداعم للأسطر المتعددة */
-        .box-element textarea {
+        /* حقل الكتابة داخل أداة النص */
+        .text-element textarea {
             width: 100%;
             height: 100%;
             background: transparent;
             border: none;
             resize: none;
-            text-align: center;
-            font-size: 16px;
-            color: #fff;
+            font-size: 20px;
+            color: #000;
             outline: none;
             font-family: Arial, sans-serif;
+            font-weight: bold;
         }
 
         /* خطوط المحاذاة الوهمية */
         .guide-line-v {
             position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 1px;
+            top: 0; bottom: 0; width: 1px;
             background-color: #e74c3c;
-            z-index: 9999;
-            pointer-events: none;
-            display: none;
+            z-index: 9999; display: none; pointer-events: none;
         }
         .guide-line-h {
             position: absolute;
-            left: 0;
-            right: 0;
-            height: 1px;
+            left: 0; right: 0; height: 1px;
             background-color: #e74c3c;
-            z-index: 9999;
-            pointer-events: none;
-            display: none;
+            z-index: 9999; display: none; pointer-events: none;
         }
     </style>
 </head>
@@ -108,16 +112,18 @@
     <h2>أداة تصميم المربعات والنصوص</h2>
     
     <div class="toolbar">
-        <button onclick="addBox()">إضافة شكل/مربع جديد</button>
-        <button onclick="changeBorder('solid')">إطار متصل</button>
-        <button onclick="changeBorder('dashed')">إطار مقطع (Dashed)</button>
-        <button onclick="bringToFront()">إحضار للمقدمة (طبقة فوق)</button>
-        <button onclick="sendToBack()">إرسال للخلف (طبقة تحت)</button>
+        <button onclick="addBox()">+ إضافة مربع</button>
+        <button onclick="addText()">+ إضافة نص</button>
+        <div style="border-left: 2px solid #ccc; margin: 0 10px;"></div> <!-- فاصل -->
+        <button onclick="bringToFront()">إحضار للمقدمة (فوق)</button>
+        <button onclick="sendToBack()">إرسال للخلف (تحت)</button>
+        <div style="border-left: 2px solid #ccc; margin: 0 10px;"></div> <!-- فاصل -->
+        <button onclick="changeBorder('solid')">إطار متصل (للمربع)</button>
+        <button onclick="changeBorder('dashed')">إطار مقطع (للمربع)</button>
     </div>
 
     <!-- مساحة العمل -->
     <div id="canvas">
-        <!-- خطوط المحاذاة الوهمية -->
         <div id="guideV" class="guide-line-v"></div>
         <div id="guideH" class="guide-line-h"></div>
     </div>
@@ -126,73 +132,80 @@
     const canvas = document.getElementById('canvas');
     const guideV = document.getElementById('guideV');
     const guideH = document.getElementById('guideH');
-    let selectedBox = null;
+    let selectedElement = null;
     let zIndexCounter = 1;
 
-    // إضافة مربع جديد
+    // 1. وظيفة إضافة مربع مستقل
     function addBox() {
         const box = document.createElement('div');
-        box.classList.add('box-element');
+        box.classList.add('canvas-element', 'box-element');
         box.style.left = '50px';
         box.style.top = '50px';
         box.style.zIndex = zIndexCounter++;
+        
+        setupElement(box);
+    }
 
-        // إضافة textarea لدعم كتابة النصوص والنزول لسطر جديد بـ Enter
+    // 2. وظيفة إضافة نص مستقل
+    function addText() {
+        const textWrapper = document.createElement('div');
+        textWrapper.classList.add('canvas-element', 'text-element');
+        textWrapper.style.left = '100px';
+        textWrapper.style.top = '200px';
+        textWrapper.style.zIndex = zIndexCounter++;
+
         const textarea = document.createElement('textarea');
-        textarea.placeholder = 'اكتب هنا...';
-        box.appendChild(textarea);
-
-        // جعل العنصر قابلاً للسحب (Drag & Drop) مع خطوط المحاذاة
-        makeDraggable(box);
-
-        // تحديد العنصر عند النقر عليه
-        box.addEventListener('mousedown', (e) => {
-            selectBox(box);
-        });
-
-        canvas.appendChild(box);
-        selectBox(box);
+        textarea.placeholder = 'اكتب نصك هنا... (اضغط Enter لسطر جديد)';
+        textWrapper.appendChild(textarea);
+        
+        setupElement(textWrapper);
     }
 
-    function selectBox(box) {
-        document.querySelectorAll('.box-element').forEach(b => b.classList.remove('selected'));
-        box.classList.add('selected');
-        selectedBox = box;
+    // إعداد العنصر (للسحب والتحديد)
+    function setupElement(el) {
+        el.addEventListener('mousedown', () => selectElement(el));
+        makeDraggable(el);
+        canvas.appendChild(el);
+        selectElement(el);
     }
 
-    // إحضار للمقدمة
+    // تحديد العنصر الحالي
+    function selectElement(el) {
+        document.querySelectorAll('.canvas-element').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedElement = el;
+    }
+
+    // 3. التحكم بالطبقات
     function bringToFront() {
-        if (selectedBox) {
-            selectedBox.style.zIndex = zIndexCounter++;
+        if (selectedElement) {
+            selectedElement.style.zIndex = zIndexCounter++;
         }
     }
-
-    // إرسال للخلف
     function sendToBack() {
-        if (selectedBox) {
-            selectedBox.style.zIndex = 0;
+        if (selectedElement) {
+            selectedElement.style.zIndex = 0;
         }
     }
 
-    // تغيير نوع الإطار (متصل أو مقطع)
+    // 4. تغيير نوع الإطار (للمربعات فقط)
     function changeBorder(type) {
-        if (selectedBox) {
+        if (selectedElement && selectedElement.classList.contains('box-element')) {
             if (type === 'dashed') {
-                selectedBox.style.border = '2px dashed #2980b9';
+                selectedElement.style.border = '2px dashed #2980b9';
             } else {
-                selectedBox.style.border = '2px solid #2980b9';
+                selectedElement.style.border = '2px solid #2980b9';
             }
         }
     }
 
-    // وظيفة السحب والإفلات مع المحاذاة الوهمية (Smart Guides)
+    // 5. وظيفة السحب والمحاذاة الوهمية
     function makeDraggable(elmnt) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
         elmnt.onmousedown = dragMouseDown;
 
         function dragMouseDown(e) {
-            // تجاهل السحب إذا كان النقر داخل الـ textarea لتسهيل الكتابة وتحديد النص
+            // السماح بالكتابة وتحديد النص داخل الـ textarea بدون تفعيل السحب
             if (e.target.tagName === 'TEXTAREA') return;
             
             e.preventDefault();
@@ -212,15 +225,14 @@
             let newLeft = elmnt.offsetLeft - pos1;
             let newTop = elmnt.offsetTop - pos2;
 
-            // نظام خطوط المحاذاة الوهمية (Snapping & Guides)
-            let boxes = document.querySelectorAll('.box-element');
-            let snapThreshold = 6; // مسافة التجاذب
-            let showV = false;
-            let showH = false;
+            // نظام المحاذاة الذكية (Snapping)
+            let allElements = document.querySelectorAll('.canvas-element');
+            let snapThreshold = 6;
+            let showV = false, showH = false;
 
-            boxes.forEach(other => {
+            allElements.forEach(other => {
                 if (other === elmnt) return;
-
+                
                 let oRect = other.getBoundingClientRect();
                 let cRect = canvas.getBoundingClientRect();
                 
@@ -229,36 +241,26 @@
                 let oRight = oLeft + other.offsetWidth;
                 let oBottom = oTop + other.offsetHeight;
 
-                // محاذاة الحواف اليمنى واليسرى (من الجانبين)
+                // محاذاة أفقية (يمين ويسار)
                 if (Math.abs(newLeft - oLeft) < snapThreshold) {
-                    newLeft = oLeft;
-                    guideV.style.left = newLeft + 'px';
-                    showV = true;
+                    newLeft = oLeft; guideV.style.left = newLeft + 'px'; showV = true;
                 }
                 if (Math.abs((newLeft + elmnt.offsetWidth) - oRight) < snapThreshold) {
-                    newLeft = oRight - elmnt.offsetWidth;
-                    guideV.style.left = (newLeft + elmnt.offsetWidth) + 'px';
-                    showV = true;
+                    newLeft = oRight - elmnt.offsetWidth; guideV.style.left = (newLeft + elmnt.offsetWidth) + 'px'; showV = true;
                 }
 
-                // محاذاة الحواف العليا والسفلى (من فوق وتحت)
+                // محاذاة رأسية (فوق وتحت)
                 if (Math.abs(newTop - oTop) < snapThreshold) {
-                    newTop = oTop;
-                    guideH.style.top = newTop + 'px';
-                    showH = true;
+                    newTop = oTop; guideH.style.top = newTop + 'px'; showH = true;
                 }
                 if (Math.abs((newTop + elmnt.offsetHeight) - oBottom) < snapThreshold) {
-                    newTop = oBottom - elmnt.offsetHeight;
-                    guideH.style.top = (newTop + elmnt.offsetHeight) + 'px';
-                    showH = true;
+                    newTop = oBottom - elmnt.offsetHeight; guideH.style.top = (newTop + elmnt.offsetHeight) + 'px'; showH = true;
                 }
             });
 
-            // إظهار أو إخفاء الخطوط الوهمية
             guideV.style.display = showV ? 'block' : 'none';
             guideH.style.display = showH ? 'block' : 'none';
 
-            // تطبيق الموقع الجديد على العنصر
             elmnt.style.left = newLeft + "px";
             elmnt.style.top = newTop + "px";
         }
